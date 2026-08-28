@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultFlow - Multi-Finance & Continuous Rollover Budgeting</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-card-hover {
+            transition: all 0.2s ease-in-out;
+        }
+        .glass-card-hover:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+    <div class="flex flex-col md:flex-row min-h-screen w-full overflow-x-hidden">
+
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between p-4 shrink-0 z-20">
+            <div>
+                <!-- App Logo -->
+                <div class="flex items-center gap-3 px-3 py-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-brand-500/20 text-white text-xl font-black">
+                        <i class="fa-solid font-bold fa-vault"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
+                            VaultFlow
+                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-brand-500/20 text-brand-400 border border-brand-500/30">v2.5</span>
+                        </h1>
+                        <p class="text-xs text-slate-400 font-medium">Multi-Finance Rollover Engine</p>
+                    </div>
+                </div>
+
+                <!-- Multi-Vault / Multi-Account Active Selector -->
+                <div class="mb-5 bg-slate-950/80 p-2.5 rounded-xl border border-slate-800/90">
+                    <div class="flex items-center justify-between mb-1.5 px-1">
+                        <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Active Financial Vault</span>
+                        <button onclick="openVaultModal()" class="text-[10px] text-brand-400 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> New
+                        </button>
+                    </div>
+                    <select id="sidebar-vault-select" onchange="switchVault(this.value)" class="w-full bg-slate-900 text-white font-bold text-xs px-2.5 py-2 rounded-lg border border-slate-700/80 focus:outline-none focus:border-brand-500 cursor-pointer">
+                        <!-- Dynamic Vaults list -->
+                    </select>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="space-y-1.5">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-white bg-slate-800 border border-slate-700/50">
+                        <i class="fa-solid fa-chart-pie w-5 text-brand-400"></i> Dashboard
+                    </button>
+                    <button onclick="switchTab('envelopes')" id="nav-envelopes" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                        <i class="fa-solid fa-arrows-rotate w-5 text-emerald-400"></i> Envelope Rollovers
+                    </button>
+                    <button onclick="switchTab('transactions')" id="nav-transactions" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                        <i class="fa-solid fa-receipt w-5 text-indigo-400"></i> Transactions
+                    </button>
+                    <button onclick="switchTab('analytics')" id="nav-analytics" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                        <i class="fa-solid fa-chart-column w-5 text-amber-400"></i> Analytics & Trends
+                    </button>
+                    <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50">
+                        <i class="fa-solid fa-sliders w-5 text-purple-400"></i> Vaults & Settings
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Month Quick Status Footer in Sidebar -->
+            <div class="mt-6 pt-4 border-t border-slate-800/80">
+                <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800 text-xs space-y-2">
+                    <div class="flex justify-between text-slate-400">
+                        <span>Active Cycle:</span>
+                        <span id="sidebar-active-month-label" class="font-bold text-white">August 2026</span>
+                    </div>
+                    <div class="flex justify-between text-slate-400">
+                        <span>Rollover Net:</span>
+                        <span id="sidebar-rollover-net" class="font-bold text-emerald-400">+$0.00</span>
+                    </div>
+                    <button onclick="openTransactionModal()" class="w-full mt-2 py-2 px-3 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-lg shadow-lg shadow-brand-600/30 flex items-center justify-center gap-2 text-xs transition active:scale-95">
+                        <i class="fa-solid fa-plus"></i> Add Transaction
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+            <header class="bg-slate-900/60 backdrop-blur border-b border-slate-800 p-4 sticky top-0 z-10 flex flex-wrap items-center justify-between gap-4">
+                <!-- Month Navigator & Vault Indicator -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800">
+                        <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="text-center px-2">
+                            <span id="current-month-display" class="font-bold text-sm tracking-wide text-white block">August 2026</span>
+                            <span id="current-month-subtext" class="text-[10px] text-slate-400">Continuous Cycle</span>
+                        </div>
+                        <button onclick="changeMonth(1)" class="w-8 h-8 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                        <button onclick="jumpToCurrentMonth()" class="ml-1 text-xs text-brand-400 hover:underline px-2 py-1 rounded bg-slate-900 border border-slate-800">
+                            Today
+                        </button>
+                    </div>
+
+                    <!-- Header Vault Badge Indicator -->
+                    <div class="px-3 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-xs flex items-center gap-2 text-indigo-300">
+                        <i id="header-vault-icon" class="fa-solid fa-wallet"></i>
+                        <span class="font-semibold" id="header-vault-name">Personal Main</span>
+                    </div>
+                </div>
+
+                <!-- Global Quick Stats & Info -->
+                <div class="flex items-center gap-3">
+                    <!-- Currency Selector Dropdown -->
+                    <select id="header-currency-select" onchange="changeCurrency(this.value)" class="bg-slate-950 text-brand-400 font-semibold text-xs px-2.5 py-1.5 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500 cursor-pointer" title="Switch Currency">
+                        <option value="THB">฿ THB</option>
+                        <option value="USD">$ USD</option>
+                        <option value="EUR">€ EUR</option>
+                        <option value="GBP">£ GBP</option>
+                        <option value="JPY">¥ JPY</option>
+                        <option value="SGD">S$ SGD</option>
+                        <option value="AUD">A$ AUD</option>
+                        <option value="CAD">CA$ CAD</option>
+                        <option value="INR">₹ INR</option>
+                    </select>
+
+                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-xs">
+                        <i class="fa-solid fa-layer-group text-brand-400"></i>
+                        <span class="text-slate-400">Rollovers:</span>
+                        <span id="active-rollovers-count" class="font-semibold text-white">0 Categories</span>
+                    </div>
+                    <button onclick="openTransactionModal()" class="md:hidden bg-brand-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">
+                        + Add
+                    </button>
+                    <button onclick="resetDataConfirmation()" class="text-slate-400 hover:text-rose-400 text-xs px-2 py-1.5 rounded hover:bg-slate-800 transition" title="Reset Demo Data">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- TAB CONTENT CONTAINER -->
+            <div class="p-4 md:p-6 space-y-6 max-w-7xl w-full mx-auto">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="tab-dashboard" class="tab-content space-y-6">
+                    <!-- Key Financial Summary Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <!-- Card 1: Carried Over Balance -->
+                        <div class="glass-card glass-card-hover p-4 rounded-2xl relative overflow-hidden">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Carried Over</span>
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                                </div>
+                            </div>
+                            <div id="card-carried-over" class="text-2xl font-black text-white">$0.00</div>
+                            <p class="text-[11px] text-slate-400 mt-1">
+                                Net balance from <span id="card-prev-month-name">previous month</span>
+                            </p>
+                        </div>
+
+                        <!-- Card 2: Allocated Target -->
+                        <div class="glass-card glass-card-hover p-4 rounded-2xl relative overflow-hidden">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Budget Assigned</span>
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-bullseye"></i>
+                                </div>
+                            </div>
+                            <div id="card-allocated" class="text-2xl font-black text-white">$0.00</div>
+                            <p class="text-[11px] text-slate-400 mt-1">Fresh monthly income allocation</p>
+                        </div>
+
+                        <!-- Card 3: Spent This Month -->
+                        <div class="glass-card glass-card-hover p-4 rounded-2xl relative overflow-hidden">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider">Spent This Month</span>
+                                <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-wallet"></i>
+                                </div>
+                            </div>
+                            <div id="card-spent" class="text-2xl font-black text-white">$0.00</div>
+                            <p id="card-spent-subtext" class="text-[11px] text-slate-400 mt-1">0 transactions recorded</p>
+                        </div>
+
+                        <!-- Card 4: Total Available Funds -->
+                        <div class="glass-card glass-card-hover p-4 rounded-2xl relative overflow-hidden border-brand-500/30 bg-gradient-to-br from-slate-900 to-emerald-950/30">
+                            <div class="flex items-center justify-between text-slate-400 mb-2">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-brand-300">Total Available</span>
+                                <div class="w-8 h-8 rounded-lg bg-brand-500/20 text-brand-400 flex items-center justify-center text-xs">
+                                    <i class="fa-solid fa-piggy-bank"></i>
+                                </div>
+                            </div>
+                            <div id="card-available" class="text-2xl font-black text-emerald-400">$0.00</div>
+                            <p class="text-[11px] text-slate-300 mt-1">
+                                Formula: <span class="text-slate-400">Carryover + Assigned - Spent</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Daily Allowance & Dynamic Health Bar -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Daily Spending Cap Indicator -->
+                        <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                        <i class="fa-solid fa-calendar-day text-brand-400"></i> Daily Safe Allowance
+                                    </h3>
+                                    <span id="days-remaining-badge" class="px-2 py-0.5 text-[11px] font-semibold bg-slate-800 text-slate-300 rounded-full border border-slate-700">14 Days Left</span>
+                                </div>
+                                <div class="my-4">
+                                    <div id="daily-allowance-amount" class="text-3xl font-black text-white">$0.00</div>
+                                    <p class="text-xs text-slate-400 mt-1">Available spending power per remaining day in month.</p>
+                                </div>
+                            </div>
+                            <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 text-xs text-slate-400">
+                                <i class="fa-solid fa-circle-info text-blue-400 mr-1"></i>
+                                Scoped strictly to <span class="font-bold text-white" id="info-vault-name">Active Vault</span> balances!
+                            </div>
+                        </div>
+
+                        <!-- Global Budget Utilization Meter -->
+                        <div class="glass-card p-5 rounded-2xl lg:col-span-2 flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                        <i class="fa-solid fa-gauge-high text-indigo-400"></i> Vault Utilization Health
+                                    </h3>
+                                    <span id="utilization-percentage" class="font-bold text-sm text-brand-400">0% Used</span>
+                                </div>
+                                <p class="text-xs text-slate-400 mb-4">Ratio of spent funds vs cumulative envelope availability.</p>
+                                
+                                <div class="w-full h-4 bg-slate-950 rounded-full overflow-hidden p-0.5 border border-slate-800">
+                                    <div id="utilization-bar" class="h-full rounded-full bg-gradient-to-r from-brand-500 via-emerald-400 to-amber-400 transition-all duration-500" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-slate-800/60 text-center text-xs">
+                                <div>
+                                    <span class="text-slate-400 block text-[10px]">TOTAL POOL</span>
+                                    <span id="health-total-pool" class="font-bold text-slate-200">$0.00</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[10px]">TOTAL SPENT</span>
+                                    <span id="health-total-spent" class="font-bold text-rose-400">$0.00</span>
+                                </div>
+                                <div>
+                                    <span class="text-slate-400 block text-[10px]">NET SURPLUS</span>
+                                    <span id="health-net-surplus" class="font-bold text-emerald-400">$0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Breakdown & Visual Charts -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Chart: Spending by Category & Customizer -->
+                        <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                        <i class="fa-solid fa-chart-pie text-brand-400"></i> Category Distribution
+                                    </h3>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Distribution View Selector -->
+                                        <select id="dashboard-chart-mode" onchange="changeDistributionChartMode(this.value)" class="bg-slate-950 text-slate-300 text-[11px] font-medium px-2.5 py-1 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500 cursor-pointer">
+                                            <option value="spent">Actual Spent</option>
+                                            <option value="target">Assigned Target</option>
+                                            <option value="available">Remaining Available</option>
+                                        </select>
+                                        <button onclick="openDistributionModal()" class="px-2.5 py-1 bg-brand-600/20 hover:bg-brand-600 text-brand-300 hover:text-white rounded-xl text-[11px] font-semibold border border-brand-500/30 flex items-center gap-1.5 transition active:scale-95">
+                                            <i class="fa-solid fa-sliders"></i> Customize
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="h-64 relative flex items-center justify-center">
+                                    <canvas id="chart-category-spending"></canvas>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400">
+                                <span>Showing: <strong id="chart-mode-label" class="text-white">Actual Spent</strong></span>
+                                <span class="text-slate-400">Click <strong>Customize</strong> to balance targets</span>
+                            </div>
+                        </div>
+
+                        <!-- Category Rollover Quick Grid -->
+                        <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                        <i class="fa-solid fa-envelope-open-text text-amber-400"></i> Active Vault Envelopes
+                                    </h3>
+                                    <button onclick="switchTab('envelopes')" class="text-xs text-brand-400 hover:underline font-medium">Manage All &rarr;</button>
+                                </div>
+                                <div id="dashboard-envelopes-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                                    <!-- Dynamic content -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. ENVELOPES & ROLLOVER MANAGEMENT VIEW -->
+                <section id="tab-envelopes" class="tab-content hidden space-y-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                Envelope Rollover Hub
+                                <i class="fa-solid fa-arrows-rotate text-brand-400 text-sm"></i>
+                            </h2>
+                            <p class="text-xs text-slate-400">
+                                Manage categories scoped to <span class="font-bold text-brand-400" id="envelope-vault-indicator">All Vaults</span>. Unused balances carry over continuously.
+                            </p>
+                        </div>
+                        <button onclick="openCategoryModal()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 flex items-center gap-2 transition">
+                            <i class="fa-solid fa-folder-plus text-brand-400"></i> New Category Envelope
+                        </button>
+                    </div>
+
+                    <!-- Detailed Category Envelope Table/Cards -->
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950/80 uppercase text-[10px] text-slate-400 tracking-wider border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Category / Vault</th>
+                                        <th class="p-4 text-center">Rollover Mode</th>
+                                        <th class="p-4 text-right">Carried Over</th>
+                                        <th class="p-4 text-right">+ Assigned Target</th>
+                                        <th class="p-4 text-right">- Spent This Month</th>
+                                        <th class="p-4 text-right">= Available Now</th>
+                                        <th class="p-4 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="envelopes-table-body" class="divide-y divide-slate-800/60 font-medium">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. TRANSACTIONS VIEW -->
+                <section id="tab-transactions" class="tab-content hidden space-y-6">
+                    <!-- Filters & Search Bar -->
+                    <div class="glass-card p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap items-center gap-3 flex-1">
+                            <!-- Search -->
+                            <div class="relative flex-1 min-w-[200px]">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-500 text-xs"></i>
+                                <input type="text" id="tx-search" oninput="renderTransactions()" placeholder="Search payee or notes..." class="w-full bg-slate-950 text-white pl-9 pr-3 py-2 rounded-xl text-xs border border-slate-800 focus:outline-none focus:border-brand-500">
+                            </div>
+
+                            <!-- Vault Filter -->
+                            <select id="tx-vault-filter" onchange="renderTransactions()" class="bg-slate-950 text-slate-300 px-3 py-2 rounded-xl text-xs border border-slate-800 focus:outline-none focus:border-brand-500">
+                                <option value="ALL">All Vaults</option>
+                            </select>
+
+                            <!-- Category Filter -->
+                            <select id="tx-category-filter" onchange="renderTransactions()" class="bg-slate-950 text-slate-300 px-3 py-2 rounded-xl text-xs border border-slate-800 focus:outline-none focus:border-brand-500">
+                                <option value="ALL">All Categories</option>
+                            </select>
+
+                            <!-- Type Filter -->
+                            <select id="tx-type-filter" onchange="renderTransactions()" class="bg-slate-950 text-slate-300 px-3 py-2 rounded-xl text-xs border border-slate-800 focus:outline-none focus:border-brand-500">
+                                <option value="ALL">All Types</option>
+                                <option value="expense">Expenses Only</option>
+                                <option value="income">Income Only</option>
+                            </select>
+                        </div>
+
+                        <button onclick="openTransactionModal()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-xs shadow-lg shadow-brand-600/30 flex items-center gap-2">
+                            <i class="fa-solid fa-plus"></i> Log Transaction
+                        </button>
+                    </div>
+
+                    <!-- Transactions Table -->
+                    <div class="glass-card rounded-2xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs text-slate-300">
+                                <thead class="bg-slate-950/80 uppercase text-[10px] text-slate-400 tracking-wider border-b border-slate-800">
+                                    <tr>
+                                        <th class="p-4">Date</th>
+                                        <th class="p-4">Payee / Description</th>
+                                        <th class="p-4">Vault Account</th>
+                                        <th class="p-4">Category</th>
+                                        <th class="p-4 text-right">Amount</th>
+                                        <th class="p-4 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-table-body" class="divide-y divide-slate-800/60">
+                                    <!-- Dynamic transactions rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. ANALYTICS VIEW -->
+                <section id="tab-analytics" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Chart: 6-Month Carryover Trend -->
+                        <div class="glass-card p-5 rounded-2xl">
+                            <h3 class="font-bold text-sm text-slate-200 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-line text-indigo-400"></i> Continuous Rollover Trend (6 Months)
+                            </h3>
+                            <div class="h-64 relative">
+                                <canvas id="chart-rollover-trend"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Chart: Income vs Expense Comparison -->
+                        <div class="glass-card p-5 rounded-2xl">
+                            <h3 class="font-bold text-sm text-slate-200 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-chart-bar text-brand-400"></i> Monthly Cash Flow Balance
+                            </h3>
+                            <div class="h-64 relative">
+                                <canvas id="chart-cashflow-bar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 5. SETTINGS & VAULT MANAGEMENT VIEW -->
+                <section id="tab-settings" class="tab-content hidden space-y-6">
+                    <div class="glass-card p-5 rounded-2xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-base text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-vault text-brand-400"></i> Financial Vaults & Accounts
+                                </h3>
+                                <p class="text-xs text-slate-400">Create separate budgets for Personal, Business, Freelance, or joint accounts.</p>
+                            </div>
+                            <button onclick="openVaultModal()" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-semibold shadow-md flex items-center gap-2">
+                                <i class="fa-solid fa-plus"></i> Create Vault
+                            </button>
+                        </div>
+
+                        <div id="vaults-list-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                            <!-- Dynamic Vault Cards -->
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Currency & Regional Preferences -->
+                        <div class="glass-card p-5 rounded-2xl space-y-4">
+                            <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-coins text-emerald-400"></i> Currency & Region
+                            </h3>
+                            <p class="text-xs text-slate-400"> Choose your preferred global currency display. </p>
+                            <div>
+                                <label class="block text-slate-400 mb-1.5 text-xs font-semibold">Active Currency</label>
+                                <select id="settings-currency-select" onchange="changeCurrency(this.value)" class="w-full bg-slate-950 text-white font-medium px-3 py-2 rounded-xl text-xs border border-slate-800 focus:outline-none focus:border-brand-500">
+                                    <option value="THB">฿ - Thai Baht (THB)</option>
+                                    <option value="USD">$ - US Dollar (USD)</option>
+                                    <option value="EUR">€ - Euro (EUR)</option>
+                                    <option value="GBP">£ - British Pound (GBP)</option>
+                                    <option value="JPY">¥ - Japanese Yen (JPY)</option>
+                                    <option value="SGD">S$ - Singapore Dollar (SGD)</option>
+                                    <option value="AUD">A$ - Australian Dollar (AUD)</option>
+                                    <option value="CAD">CA$ - Canadian Dollar (CAD)</option>
+                                    <option value="INR">₹ - Indian Rupee (INR)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Data Management -->
+                        <div class="glass-card p-5 rounded-2xl space-y-4">
+                            <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-database text-purple-400"></i> Backup & Persistence
+                            </h3>
+                            <p class="text-xs text-slate-400"> Export or restore all multi-vault finances and carryover configurations. </p>
+                            <div class="flex flex-wrap gap-3 pt-2">
+                                <button onclick="exportJSONData()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 flex items-center gap-2">
+                                    <i class="fa-solid fa-download text-emerald-400"></i> Export JSON
+                                </button>
+                                <label class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold border border-slate-700 flex items-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-upload text-blue-400"></i> Import JSON
+                                    <input type="file" id="import-file-input" onchange="importJSONData(event)" class="hidden" accept=".json">
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Reset & Restore Defaults -->
+                        <div class="glass-card p-5 rounded-2xl space-y-4 border-rose-900/30">
+                            <h3 class="font-bold text-sm text-slate-200 flex items-center gap-2">
+                                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i> Factory Reset
+                            </h3>
+                            <p class="text-xs text-slate-400"> Reload sample multi-vault demo data for testing. </p>
+                            <button onclick="resetDataConfirmation()" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 text-rose-300 hover:text-white rounded-xl text-xs font-semibold border border-rose-500/30 flex items-center gap-2 transition">
+                                <i class="fa-solid fa-arrow-rotate-left"></i> Restore Sample Demo Data
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL: Add/Edit Vault Account -->
+    <div id="modal-vault" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative">
+            <button onclick="closeModal('modal-vault')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="modal-vault-title" class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-vault text-brand-400"></i> Create Financial Vault / Account
+            </h3>
+            <form id="form-vault" onsubmit="handleVaultSubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="vault-id-edit">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Vault Name</label>
+                    <input type="text" id="vault-name" required placeholder="e.g. Personal Main, Business LLC, Side Hustle" class="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Icon</label>
+                    <select id="vault-icon" class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800">
+                        <option value="fa-user">Personal Profile</option>
+                        <option value="fa-briefcase">Business / Freelance</option>
+                        <option value="fa-house-user">Household / Family</option>
+                        <option value="fa-credit-card">Credit Card Account</option>
+                        <option value="fa-piggy-bank">Savings / Investment</option>
+                        <option value="fa-plane">Travel & Vacation</option>
+                    </select>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-vault')" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30">Save Vault</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add/Edit Transaction -->
+    <div id="modal-transaction" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative">
+            <button onclick="closeModal('modal-transaction')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="modal-tx-title" class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-receipt text-brand-400"></i> Log New Transaction
+            </h3>
+            <form id="form-transaction" onsubmit="handleTransactionSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Financial Vault</label>
+                    <select id="tx-vault" required class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                        <!-- Dynamic Vault options -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Transaction Type</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center justify-center gap-2 p-2 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10">
+                            <input type="radio" name="tx-type" value="expense" checked class="hidden">
+                            <span class="text-rose-400 font-bold"><i class="fa-solid fa-minus"></i> Expense</span>
+                        </label>
+                        <label class="flex items-center justify-center gap-2 p-2 rounded-xl border border-slate-800 bg-slate-950 cursor-pointer has-[:checked]:border-brand-500 has-[:checked]:bg-brand-500/10">
+                            <input type="radio" name="tx-type" value="income" class="hidden">
+                            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-plus"></i> Income</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Amount (<span class="currency-symbol">฿</span>)</label>
+                    <input type="number" step="0.01" id="tx-amount" required placeholder="0.00" class="w-full bg-slate-950 text-white px-3 py-2.5 rounded-xl border border-slate-800 text-sm focus:outline-none focus:border-brand-500 font-bold">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Payee / Title</label>
+                    <input type="text" id="tx-payee" required placeholder="e.g. Whole Foods, Client Payment, Amazon" class="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Category Envelope</label>
+                    <select id="tx-category" required class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                        <!-- Dynamic options -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Date</label>
+                    <input type="date" id="tx-date" required class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-transaction')" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30">Save Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add/Edit Category Envelope -->
+    <div id="modal-category" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-md p-6 rounded-2xl border border-slate-700 shadow-2xl relative">
+            <button onclick="closeModal('modal-category')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <h3 id="modal-cat-title" class="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-folder-plus text-brand-400"></i> Category Configuration
+            </h3>
+            <form id="form-category" onsubmit="handleCategorySubmit(event)" class="space-y-4 text-xs">
+                <input type="hidden" id="cat-id-edit">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Vault Assignment</label>
+                    <select id="cat-vault" class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800">
+                        <option value="ALL">Global (Applies to All Vaults)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Category Name</label>
+                    <input type="text" id="cat-name" required placeholder="e.g. Dining Out, Utilities, Software SaaS" class="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Monthly Assigned Target (<span class="currency-symbol">฿</span>)</label>
+                    <input type="number" step="0.01" id="cat-target" required placeholder="400.00" class="w-full bg-slate-950 text-white px-3 py-2 rounded-xl border border-slate-800 text-sm font-bold focus:outline-none focus:border-brand-500">
+                </div>
+
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Icon</label>
+                    <select id="cat-icon" class="w-full bg-slate-950 text-slate-200 px-3 py-2 rounded-xl border border-slate-800">
+                        <option value="fa-utensils">Utensils / Food</option>
+                        <option value="fa-cart-shopping">Groceries</option>
+                        <option value="fa-house">Housing / Rent</option>
+                        <option value="fa-bolt">Utilities</option>
+                        <option value="fa-car">Transport / Fuel</option>
+                        <option value="fa-laptop-code">Software / Tech</option>
+                        <option value="fa-film">Entertainment</option>
+                        <option value="fa-heart-pulse">Healthcare</option>
+                        <option value="fa-piggy-bank">Savings Goal</option>
+                        <option value="fa-bag-shopping">Shopping</option>
+                        <option value="fa-briefcase">Salary / Revenue</option>
+                    </select>
+                </div>
+
+                <!-- Continuous Month Rollover Toggle -->
+                <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-white block">Enable Rollover Carryover</span>
+                            <span class="text-[10px] text-slate-400">Unused balance rolls into next month</span>
+                        </div>
+                        <input type="checkbox" id="cat-rollover" checked class="w-4 h-4 accent-brand-500 rounded cursor-pointer">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-category')" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl">Cancel</button>
+                    <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30">Save Envelope</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Customize Spending Distribution Matrix -->
+    <div id="modal-distribution" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-card w-full max-w-xl p-6 rounded-2xl border border-slate-700 shadow-2xl relative max-h-[90vh] flex flex-col">
+            <button onclick="closeModal('modal-distribution')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="mb-4">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-brand-400"></i> Customize Target Distribution
+                </h3>
+                <p class="text-xs text-slate-400">Adjust monthly allocation targets across your expense categories with live visual feedback.</p>
+            </div>
+
+            <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 mb-4 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div>
+                    <span class="text-slate-400 block text-[10px] font-semibold">TOTAL ASSIGNED TARGET</span>
+                    <span id="dist-total-assigned" class="font-black text-emerald-400 text-base">฿0.00</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] text-slate-400 mr-1 font-semibold">Quick Presets:</span>
+                    <button type="button" onclick="applyDistributionPreset('equal')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold border border-slate-700 transition">Equal Spread</button>
+                    <button type="button" onclick="applyDistributionPreset('50-30-20')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold border border-slate-700 transition">50/30/20 Rule</button>
+                </div>
+            </div>
+
+            <div id="distribution-sliders-container" class="space-y-4 overflow-y-auto flex-1 pr-1.5 mb-4">
+                <!-- Dynamic sliders -->
+            </div>
+
+            <div class="pt-3 flex gap-3 border-t border-slate-800">
+                <button type="button" onclick="closeModal('modal-distribution')" class="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs">Cancel</button>
+                <button type="button" onclick="saveDistributionCustomization()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl shadow-lg shadow-brand-600/30 text-xs">Save & Apply Distribution</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOM TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        /**
+         * VaultFlow Core Application State Engine (Multi-Vault Version)
+         */
+        const STORAGE_KEY_VAULTS = 'vaultflow_vaults_v2.5';
+        const STORAGE_KEY_CATEGORIES = 'vaultflow_categories_v2.5';
+        const STORAGE_KEY_TRANSACTIONS = 'vaultflow_transactions_v2.5';
+        const STORAGE_KEY_CURRENCY = 'vaultflow_currency_v2.5';
+        const STORAGE_KEY_ACTIVE_VAULT = 'vaultflow_active_vault_v2.5';
+
+        const CURRENCIES = {
+            THB: { code: 'THB', symbol: '฿', locale: 'th-TH', name: 'Thai Baht (THB)' },
+            USD: { code: 'USD', symbol: '$', locale: 'en-US', name: 'US Dollar (USD)' },
+            EUR: { code: 'EUR', symbol: '€', locale: 'de-DE', name: 'Euro (EUR)' },
+            GBP: { code: 'GBP', symbol: '£', locale: 'en-GB', name: 'British Pound (GBP)' },
+            JPY: { code: 'JPY', symbol: '¥', locale: 'ja-JP', name: 'Japanese Yen (JPY)' },
+            SGD: { code: 'SGD', symbol: 'S$', locale: 'en-SG', name: 'Singapore Dollar (SGD)' },
+            AUD: { code: 'AUD', symbol: 'A$', locale: 'en-AU', name: 'Australian Dollar (AUD)' },
+            CAD: { code: 'CAD', symbol: 'CA$', locale: 'en-CA', name: 'Canadian Dollar (CAD)' },
+            INR: { code: 'INR', symbol: '₹', locale: 'en-IN', name: 'Indian Rupee (INR)' }
+        };
+
+        const DEFAULT_VAULTS = [
+            { id: 'vault_personal', name: 'Personal Main', icon: 'fa-user' },
+            { id: 'vault_business', name: 'Business / Freelance', icon: 'fa-briefcase' }
+        ];
+
+        const DEFAULT_CATEGORIES = [
+            { id: 'cat_groceries', vaultId: 'vault_personal', name: 'Groceries', allocatedTarget: 15000, allowRollover: true, icon: 'fa-cart-shopping', color: '#10b981', type: 'expense' },
+            { id: 'cat_dining', vaultId: 'vault_personal', name: 'Dining Out', allocatedTarget: 8000, allowRollover: true, icon: 'fa-utensils', color: '#f59e0b', type: 'expense' },
+            { id: 'cat_rent', vaultId: 'vault_personal', name: 'Rent & Housing', allocatedTarget: 25000, allowRollover: false, icon: 'fa-house', color: '#6366f1', type: 'expense' },
+            { id: 'cat_savings', vaultId: 'vault_personal', name: 'Emergency Fund', allocatedTarget: 10000, allowRollover: true, icon: 'fa-piggy-bank', color: '#8b5cf6', type: 'expense' },
+            { id: 'cat_salary', vaultId: 'vault_personal', name: 'Monthly Salary', allocatedTarget: 95000, allowRollover: false, icon: 'fa-briefcase', color: '#10b981', type: 'income' },
+            
+            // Business Vault Categories
+            { id: 'cat_software', vaultId: 'vault_business', name: 'Software & Cloud SaaS', allocatedTarget: 6000, allowRollover: true, icon: 'fa-laptop-code', color: '#06b6d4', type: 'expense' },
+            { id: 'cat_clients', vaultId: 'vault_business', name: 'Client Retainers', allocatedTarget: 120000, allowRollover: false, icon: 'fa-briefcase', color: '#10b981', type: 'income' }
+        ];
+
+        const DEFAULT_TRANSACTIONS = [
+            // Personal Vault Transactions
+            { id: 'tx_101', vaultId: 'vault_personal', date: '2026-08-01', payee: 'Acme Corp Salary', categoryId: 'cat_salary', amount: 95000, type: 'income' },
+            { id: 'tx_102', vaultId: 'vault_personal', date: '2026-08-02', payee: 'Landlord Rent', categoryId: 'cat_rent', amount: 25000, type: 'expense' },
+            { id: 'tx_103', vaultId: 'vault_personal', date: '2026-08-08', payee: 'Organic Gourmet Store', categoryId: 'cat_groceries', amount: 6200, type: 'expense' },
+            { id: 'tx_104', vaultId: 'vault_personal', date: '2026-08-22', payee: 'Italian Dining Spot', categoryId: 'cat_dining', amount: 2800, type: 'expense' },
+
+            // Business Vault Transactions
+            { id: 'tx_201', vaultId: 'vault_business', date: '2026-08-03', payee: 'Global Client Payout', categoryId: 'cat_clients', amount: 120000, type: 'income' },
+            { id: 'tx_202', vaultId: 'vault_business', date: '2026-08-10', payee: 'AWS & Vercel Hosting', categoryId: 'cat_software', amount: 4200, type: 'expense' }
+        ];
+
+        // Global State Variables
+        let vaults = [];
+        let activeVaultId = 'vault_personal'; // 'ALL' or specific vault ID
+        let categories = [];
+        let transactions = [];
+        let currentCurrency = 'THB';
+        let currentYearMonth = '2026-08';
+        let activeTab = 'dashboard';
+        let activeChartDistributionMode = 'spent';
+        let tempDistributionTargets = {};
+        let editingCategoryId = null;
+        let editingVaultId = null;
+        let chartCategoryInstance = null;
+        let chartRolloverTrendInstance = null;
+        let chartCashflowInstance = null;
+
+        function initApp() {
+            const savedVaults = localStorage.getItem(STORAGE_KEY_VAULTS);
+            const savedCats = localStorage.getItem(STORAGE_KEY_CATEGORIES);
+            const savedTxs = localStorage.getItem(STORAGE_KEY_TRANSACTIONS);
+            const savedCurr = localStorage.getItem(STORAGE_KEY_CURRENCY);
+            const savedActiveVault = localStorage.getItem(STORAGE_KEY_ACTIVE_VAULT);
+
+            vaults = savedVaults ? JSON.parse(savedVaults) : [...DEFAULT_VAULTS];
+            categories = savedCats ? JSON.parse(savedCats) : [...DEFAULT_CATEGORIES];
+            transactions = savedTxs ? JSON.parse(savedTxs) : [...DEFAULT_TRANSACTIONS];
+            currentCurrency = savedCurr || 'THB';
+            activeVaultId = savedActiveVault || 'vault_personal';
+
+            saveState();
+            populateVaultDropdowns();
+            populateCategoryDropdowns();
+            syncCurrencySelectors();
+            renderApp();
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY_VAULTS, JSON.stringify(vaults));
+            localStorage.setItem(STORAGE_KEY_CATEGORIES, JSON.stringify(categories));
+            localStorage.setItem(STORAGE_KEY_TRANSACTIONS, JSON.stringify(transactions));
+            localStorage.setItem(STORAGE_KEY_CURRENCY, currentCurrency);
+            localStorage.setItem(STORAGE_KEY_ACTIVE_VAULT, activeVaultId);
+        }
+
+        function formatMonthLabel(yearMonth) {
+            const [y, m] = yearMonth.split('-').map(Number);
+            const date = new Date(y, m - 1, 1);
+            return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        function changeMonth(delta) {
+            const [y, m] = currentYearMonth.split('-').map(Number);
+            const d = new Date(y, m - 1 + delta, 1);
+            const newY = d.getFullYear();
+            const newM = String(d.getMonth() + 1).padStart(2, '0');
+            currentYearMonth = `${newY}-${newM}`;
+            renderApp();
+        }
+
+        function jumpToCurrentMonth() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            currentYearMonth = `${y}-${m}`;
+            renderApp();
+        }
+
+        function switchVault(vaultId) {
+            activeVaultId = vaultId;
+            saveState();
+            populateCategoryDropdowns();
+            renderApp();
+            showToast(`Switched active vault context`, 'info');
+        }
+
+        function getScopedCategories() {
+            if (activeVaultId === 'ALL') return categories;
+            return categories.filter(c => c.vaultId === 'ALL' || c.vaultId === activeVaultId || !c.vaultId);
+        }
+
+        function getScopedTransactions() {
+            if (activeVaultId === 'ALL') return transactions;
+            return transactions.filter(t => t.vaultId === activeVaultId || !t.vaultId);
+        }
+
+        /**
+         * Continuous Carryover Engine with Vault Isolation
+         */
+        function calculateMonthCategoryState(yearMonth, categoryId) {
+            const cat = categories.find(c => c.id === categoryId);
+            if (!cat) return { carriedOver: 0, allocated: 0, spent: 0, available: 0 };
+
+            const allocated = cat.type === 'expense' ? (cat.allocatedTarget || 0) : 0;
+            const scopedTxs = getScopedTransactions();
+
+            const spent = scopedTxs
+                .filter(t => t.categoryId === categoryId && t.date.startsWith(yearMonth))
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            if (!cat.allowRollover) {
+                return { carriedOver: 0, allocated, spent, available: allocated - spent };
+            }
+
+            let runningCarryover = 0;
+            const [targetY, targetM] = yearMonth.split('-').map(Number);
+
+            for (let i = 12; i >= 1; i--) {
+                const histDate = new Date(targetY, targetM - 1 - i, 1);
+                const histYM = `${histDate.getFullYear()}-${String(histDate.getMonth() + 1).padStart(2, '0')}`;
+                
+                const histSpent = scopedTxs
+                    .filter(t => t.categoryId === categoryId && t.date.startsWith(histYM))
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                runningCarryover = runningCarryover + allocated - histSpent;
+            }
+
+            const available = runningCarryover + allocated - spent;
+            return { carriedOver: runningCarryover, allocated, spent, available };
+        }
+
+        function renderApp() {
+            const label = formatMonthLabel(currentYearMonth);
+            document.getElementById('current-month-display').textContent = label;
+            document.getElementById('sidebar-active-month-label').textContent = label;
+
+            // Vault Header Badge
+            const activeVault = vaults.find(v => v.id === activeVaultId);
+            const vaultName = activeVaultId === 'ALL' ? 'All Finances Combined' : (activeVault ? activeVault.name : 'Personal Main');
+            const vaultIcon = activeVaultId === 'ALL' ? 'fa-layer-group' : (activeVault ? activeVault.icon : 'fa-wallet');
+
+            document.getElementById('header-vault-name').textContent = vaultName;
+            document.getElementById('header-vault-icon').className = `fa-solid ${vaultIcon}`;
+            document.getElementById('info-vault-name').textContent = vaultName;
+            document.getElementById('envelope-vault-indicator').textContent = vaultName;
+
+            const scopedCats = getScopedCategories();
+            const scopedTxs = getScopedTransactions();
+
+            // Active Rollover Count
+            const rolloverCount = scopedCats.filter(c => c.allowRollover).length;
+            document.getElementById('active-rollovers-count').textContent = `${rolloverCount} Categories`;
+
+            // Calculate global month totals
+            let totalCarriedOver = 0;
+            let totalAllocated = 0;
+            let totalSpent = 0;
+
+            scopedCats.filter(c => c.type === 'expense').forEach(cat => {
+                const st = calculateMonthCategoryState(currentYearMonth, cat.id);
+                totalCarriedOver += st.carriedOver;
+                totalAllocated += st.allocated;
+                totalSpent += st.spent;
+            });
+
+            const totalAvailable = totalCarriedOver + totalAllocated - totalSpent;
+
+            const sidebarNetEl = document.getElementById('sidebar-rollover-net');
+            if (sidebarNetEl) {
+                sidebarNetEl.textContent = (totalCarriedOver >= 0 ? '+' : '') + formatCurrency(totalCarriedOver);
+                sidebarNetEl.className = totalCarriedOver >= 0 ? 'font-bold text-emerald-400' : 'font-bold text-rose-400';
+            }
+
+            document.getElementById('card-carried-over').textContent = formatCurrency(totalCarriedOver);
+            document.getElementById('card-allocated').textContent = formatCurrency(totalAllocated);
+            document.getElementById('card-spent').textContent = formatCurrency(totalSpent);
+            document.getElementById('card-available').textContent = formatCurrency(totalAvailable);
+
+            const monthTxCount = scopedTxs.filter(t => t.date.startsWith(currentYearMonth)).length;
+            document.getElementById('card-spent-subtext').textContent = `${monthTxCount} transactions recorded`;
+
+            // Daily Safe Allowance
+            const [cy, cm] = currentYearMonth.split('-').map(Number);
+            const totalDaysInMonth = new Date(cy, cm, 0).getDate();
+            const now = new Date();
+            let remainingDays = totalDaysInMonth;
+
+            if (now.getFullYear() === cy && (now.getMonth() + 1) === cm) {
+                remainingDays = Math.max(1, totalDaysInMonth - now.getDate() + 1);
+            }
+            document.getElementById('days-remaining-badge').textContent = `${remainingDays} Days Left`;
+            const dailyAllowance = Math.max(0, totalAvailable / remainingDays);
+            document.getElementById('daily-allowance-amount').textContent = formatCurrency(dailyAllowance);
+
+            // Health Bar
+            const totalPool = totalCarriedOver + totalAllocated;
+            const utilRatio = totalPool > 0 ? Math.min(100, Math.round((totalSpent / totalPool) * 100)) : 0;
+            
+            document.getElementById('utilization-percentage').textContent = `${utilRatio}% Used`;
+            document.getElementById('utilization-bar').style.width = `${utilRatio}%`;
+            document.getElementById('health-total-pool').textContent = formatCurrency(totalPool);
+            document.getElementById('health-total-spent').textContent = formatCurrency(totalSpent);
+            document.getElementById('health-net-surplus').textContent = formatCurrency(totalAvailable);
+
+            renderDashboardSnapshots();
+            renderEnvelopes();
+            renderTransactions();
+            renderAnalytics();
+            renderVaultsSettingsList();
+        }
+
+        function renderDashboardSnapshots() {
+            const listEl = document.getElementById('dashboard-envelopes-list');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+            const scopedCats = getScopedCategories().filter(c => c.type === 'expense');
+
+            scopedCats.forEach(cat => {
+                const st = calculateMonthCategoryState(currentYearMonth, cat.id);
+                const percent = (st.carriedOver + st.allocated) > 0 
+                    ? Math.min(100, Math.round((st.spent / (st.carriedOver + st.allocated)) * 100)) 
+                    : 0;
+
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-1.5';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid ${cat.icon} text-brand-400"></i> ${cat.name}
+                        </span>
+                        <span class="font-bold ${st.available >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                            ${formatCurrency(st.available)} left
+                        </span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full bg-brand-500 rounded-full" style="width: ${percent}%"></div>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function renderEnvelopes() {
+            const tbody = document.getElementById('envelopes-table-body');
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+            const scopedCats = getScopedCategories();
+
+            scopedCats.forEach(cat => {
+                const st = calculateMonthCategoryState(currentYearMonth, cat.id);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/30 transition';
+
+                const isExpense = cat.type === 'expense';
+                const v = vaults.find(vault => vault.id === cat.vaultId);
+                const vBadge = v ? v.name : (cat.vaultId === 'ALL' ? 'Global' : 'Personal');
+
+                tr.innerHTML = `
+                    <td class="p-4 font-semibold text-white flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-brand-400 text-xs">
+                            <i class="fa-solid ${cat.icon}"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold">${cat.name}</div>
+                            <div class="text-[10px] text-slate-500 uppercase font-semibold">${vBadge} • ${cat.type}</div>
+                        </div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="toggleCategoryRollover('${cat.id}')" class="px-2.5 py-1 rounded-lg text-[10px] font-bold border transition ${cat.allowRollover ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                            <i class="fa-solid ${cat.allowRollover ? 'fa-circle-check' : 'fa-circle-xmark'} mr-1"></i>
+                            ${cat.allowRollover ? 'Rollover Active' : 'Resets Monthly'}
+                        </button>
+                    </td>
+                    <td class="p-4 text-right ${st.carriedOver >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${isExpense ? (st.carriedOver >= 0 ? '+' : '') + formatCurrency(st.carriedOver) : '-'}
+                    </td>
+                    <td class="p-4 text-right text-slate-200">
+                        ${isExpense ? formatCurrency(st.allocated) : '-'}
+                    </td>
+                    <td class="p-4 text-right text-rose-400">
+                        ${formatCurrency(st.spent)}
+                    </td>
+                    <td class="p-4 text-right font-black ${st.available >= 0 ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${isExpense ? formatCurrency(st.available) : '-'}
+                    </td>
+                    <td class="p-4 text-center space-x-1">
+                        <button onclick="openCategoryModal('${cat.id}')" class="p-1.5 text-slate-400 hover:text-white transition" title="Edit Category">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        <button onclick="deleteCategory('${cat.id}')" class="p-1.5 text-slate-400 hover:text-rose-400 transition" title="Delete Category">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderTransactions() {
+            const tbody = document.getElementById('transactions-table-body');
+            if (!tbody) return;
+
+            const searchQuery = (document.getElementById('tx-search')?.value || '').toLowerCase();
+            const vaultFilter = document.getElementById('tx-vault-filter')?.value || 'ALL';
+            const catFilter = document.getElementById('tx-category-filter')?.value || 'ALL';
+            const typeFilter = document.getElementById('tx-type-filter')?.value || 'ALL';
+
+            tbody.innerHTML = '';
+
+            const filtered = transactions.filter(t => {
+                const matchesMonth = t.date.startsWith(currentYearMonth);
+                const matchesSearch = t.payee.toLowerCase().includes(searchQuery);
+                const matchesVault = vaultFilter === 'ALL' || t.vaultId === vaultFilter;
+                const matchesCat = catFilter === 'ALL' || t.categoryId === catFilter;
+                const matchesType = typeFilter === 'ALL' || t.type === typeFilter;
+
+                return matchesMonth && matchesSearch && matchesVault && matchesCat && matchesType;
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="p-8 text-center text-slate-500">
+                            No transactions recorded for ${formatMonthLabel(currentYearMonth)} matching criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            filtered.forEach(t => {
+                const cat = categories.find(c => c.id === t.categoryId);
+                const v = vaults.find(vault => vault.id === t.vaultId);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/30 transition';
+
+                tr.innerHTML = `
+                    <td class="p-4 text-slate-400 text-xs">${t.date}</td>
+                    <td class="p-4 font-bold text-white">${t.payee}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold">
+                            <i class="fa-solid ${v?.icon || 'fa-wallet'} mr-1"></i> ${v?.name || 'Personal'}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 text-[11px] border border-slate-700">
+                            <i class="fa-solid ${cat?.icon || 'fa-tag'} mr-1 text-brand-400"></i> ${cat?.name || 'Uncategorized'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-right font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteTransaction('${t.id}')" class="p-1 text-slate-400 hover:text-rose-400 transition" title="Delete">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAnalytics() {
+            const ctxCategory = document.getElementById('chart-category-spending')?.getContext('2d');
+            if (ctxCategory) {
+                const expenseCats = getScopedCategories().filter(c => c.type === 'expense');
+                const labels = expenseCats.map(c => c.name);
+                const scopedTxs = getScopedTransactions();
+
+                let data = [];
+                if (activeChartDistributionMode === 'target') {
+                    data = expenseCats.map(c => c.allocatedTarget || 0);
+                } else if (activeChartDistributionMode === 'available') {
+                    data = expenseCats.map(c => Math.max(0, calculateMonthCategoryState(currentYearMonth, c.id).available));
+                } else {
+                    data = expenseCats.map(c => {
+                        return scopedTxs
+                            .filter(t => t.categoryId === c.id && t.date.startsWith(currentYearMonth))
+                            .reduce((sum, t) => sum + t.amount, 0);
+                    });
+                }
+
+                if (chartCategoryInstance) chartCategoryInstance.destroy();
+
+                chartCategoryInstance = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data,
+                            backgroundColor: ['#10b981', '#f59e0b', '#6366f1', '#06b6d4', '#8b5cf6', '#ec4899', '#f43f5e', '#3b82f6', '#14b8a6'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 } } }
+                        }
+                    }
+                });
+            }
+
+            // Continuous 6-Month Trend
+            const ctxTrend = document.getElementById('chart-rollover-trend')?.getContext('2d');
+            if (ctxTrend) {
+                const last6Months = [];
+                const [cy, cm] = currentYearMonth.split('-').map(Number);
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(cy, cm - 1 - i, 1);
+                    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    last6Months.push(ym);
+                }
+
+                const trendLabels = last6Months.map(ym => formatMonthLabel(ym).split(' ')[0]);
+                const trendData = last6Months.map(ym => {
+                    let carriedSum = 0;
+                    getScopedCategories().filter(c => c.type === 'expense').forEach(cat => {
+                        const st = calculateMonthCategoryState(ym, cat.id);
+                        carriedSum += st.carriedOver;
+                    });
+                    return carriedSum;
+                });
+
+                if (chartRolloverTrendInstance) chartRolloverTrendInstance.destroy();
+
+                chartRolloverTrendInstance = new Chart(ctxTrend, {
+                    type: 'line',
+                    data: {
+                        labels: trendLabels,
+                        datasets: [{
+                            label: `Net Rollover Carried Forward`,
+                            data: trendData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { ticks: { color: '#64748b' }, grid: { display: false } },
+                            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Cashflow Bar
+            const ctxCashflow = document.getElementById('chart-cashflow-bar')?.getContext('2d');
+            if (ctxCashflow) {
+                const scopedTxs = getScopedTransactions();
+                const income = scopedTxs
+                    .filter(t => t.type === 'income' && t.date.startsWith(currentYearMonth))
+                    .reduce((s, t) => s + t.amount, 0);
+
+                const expense = scopedTxs
+                    .filter(t => t.type === 'expense' && t.date.startsWith(currentYearMonth))
+                    .reduce((s, t) => s + t.amount, 0);
+
+                if (chartCashflowInstance) chartCashflowInstance.destroy();
+
+                chartCashflowInstance = new Chart(ctxCashflow, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Income', 'Expense'],
+                        datasets: [{
+                            data: [income, expense],
+                            backgroundColor: ['#10b981', '#f43f5e'],
+                            borderRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: '#64748b' }, grid: { display: false } },
+                            y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function renderVaultsSettingsList() {
+            const container = document.getElementById('vaults-list-container');
+            if (!container) return;
+
+            container.innerHTML = '';
+            vaults.forEach(v => {
+                const txCount = transactions.filter(t => t.vaultId === v.id).length;
+                const catCount = categories.filter(c => c.vaultId === v.id).length;
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-3';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-slate-800 text-brand-400 flex items-center justify-center">
+                                <i class="fa-solid ${v.icon}"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white text-xs">${v.name}</h4>
+                                <span class="text-[10px] text-slate-500">${catCount} categories • ${txCount} txs</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button onclick="openVaultModal('${v.id}')" class="p-1 text-slate-400 hover:text-white" title="Edit Vault"><i class="fa-solid fa-pen-to-square"></i></button>
+                            ${vaults.length > 1 ? `<button onclick="deleteVault('${v.id}')" class="p-1 text-slate-400 hover:text-rose-400" title="Delete Vault"><i class="fa-solid fa-trash-can"></i></button>` : ''}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function populateVaultDropdowns() {
+            const sidebarSel = document.getElementById('sidebar-vault-select');
+            const txVaultSel = document.getElementById('tx-vault');
+            const catVaultSel = document.getElementById('cat-vault');
+            const filterVaultSel = document.getElementById('tx-vault-filter');
+
+            if (!sidebarSel || !txVaultSel) return;
+
+            sidebarSel.innerHTML = '<option value="ALL">✨ All Finances Combined</option>';
+            filterVaultSel.innerHTML = '<option value="ALL">All Vaults</option>';
+            txVaultSel.innerHTML = '';
+            catVaultSel.innerHTML = '<option value="ALL">Global (Applies to All Vaults)</option>';
+
+            vaults.forEach(v => {
+                const opt1 = new Option(v.name, v.id);
+                sidebarSel.add(opt1);
+
+                const opt2 = new Option(v.name, v.id);
+                txVaultSel.add(opt2);
+
+                const opt3 = new Option(v.name, v.id);
+                catVaultSel.add(opt3);
+
+                const opt4 = new Option(v.name, v.id);
+                filterVaultSel.add(opt4);
+            });
+
+            sidebarSel.value = activeVaultId;
+        }
+
+        function populateCategoryDropdowns() {
+            const txCatSelect = document.getElementById('tx-category');
+            const filterCatSelect = document.getElementById('tx-category-filter');
+            if (!txCatSelect || !filterCatSelect) return;
+
+            txCatSelect.innerHTML = '';
+            filterCatSelect.innerHTML = '<option value="ALL">All Categories</option>';
+
+            const scopedCats = getScopedCategories();
+            scopedCats.forEach(cat => {
+                const opt1 = document.createElement('option');
+                opt1.value = cat.id;
+                opt1.textContent = `${cat.name} (${cat.type})`;
+                txCatSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = cat.id;
+                opt2.textContent = cat.name;
+                filterCatSelect.appendChild(opt2);
+            });
+        }
+
+        function openVaultModal(vaultId = null) {
+            editingVaultId = vaultId;
+            const modal = document.getElementById('modal-vault');
+            const title = document.getElementById('modal-vault-title');
+
+            if (vaultId) {
+                const v = vaults.find(item => item.id === vaultId);
+                if (!v) return;
+                title.innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-400"></i> Edit Vault`;
+                document.getElementById('vault-id-edit').value = v.id;
+                document.getElementById('vault-name').value = v.name;
+                document.getElementById('vault-icon').value = v.icon;
+            } else {
+                title.innerHTML = `<i class="fa-solid fa-vault text-brand-400"></i> Create Financial Vault`;
+                document.getElementById('form-vault').reset();
+                document.getElementById('vault-id-edit').value = '';
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function handleVaultSubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('vault-id-edit').value;
+            const name = document.getElementById('vault-name').value;
+            const icon = document.getElementById('vault-icon').value;
+
+            if (editId) {
+                const v = vaults.find(item => item.id === editId);
+                if (v) {
+                    v.name = name;
+                    v.icon = icon;
+                }
+            } else {
+                const newVault = {
+                    id: 'vault_' + Date.now(),
+                    name,
+                    icon
+                };
+                vaults.push(newVault);
+                activeVaultId = newVault.id;
+            }
+
+            saveState();
+            populateVaultDropdowns();
+            closeModal('modal-vault');
+            renderApp();
+            showToast('Financial Vault saved successfully!', 'success');
+        }
+
+        function deleteVault(id) {
+            if (vaults.length <= 1) {
+                showToast('You must keep at least one active Vault.', 'warning');
+                return;
+            }
+            vaults = vaults.filter(v => v.id !== id);
+            transactions = transactions.filter(t => t.vaultId !== id);
+            categories = categories.filter(c => c.vaultId !== id);
+
+            if (activeVaultId === id) activeVaultId = vaults[0].id;
+
+            saveState();
+            populateVaultDropdowns();
+            renderApp();
+            showToast('Vault deleted', 'warning');
+        }
+
+        function switchTab(tabId) {
+            activeTab = tabId;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabId}`)?.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/50';
+            });
+
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            if (activeBtn) {
+                activeBtn.className = 'nav-btn w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl font-medium text-sm transition text-white bg-slate-800 border border-slate-700/50';
+            }
+
+            renderApp();
+        }
+
+        function openCategoryModal(catId = null) {
+            editingCategoryId = catId;
+            const modal = document.getElementById('modal-category');
+            const title = document.getElementById('modal-cat-title');
+            
+            if (catId) {
+                const cat = categories.find(c => c.id === catId);
+                if (!cat) return;
+
+                title.innerHTML = `<i class="fa-solid fa-pen-to-square text-brand-400"></i> Edit Envelope`;
+                document.getElementById('cat-id-edit').value = cat.id;
+                document.getElementById('cat-vault').value = cat.vaultId || 'ALL';
+                document.getElementById('cat-name').value = cat.name;
+                document.getElementById('cat-target').value = cat.allocatedTarget;
+                document.getElementById('cat-icon').value = cat.icon;
+                document.getElementById('cat-rollover').checked = cat.allowRollover;
+            } else {
+                title.innerHTML = `<i class="fa-solid fa-folder-plus text-brand-400"></i> New Category Envelope`;
+                document.getElementById('form-category').reset();
+                document.getElementById('cat-id-edit').value = '';
+                document.getElementById('cat-vault').value = activeVaultId === 'ALL' ? 'vault_personal' : activeVaultId;
+                document.getElementById('cat-rollover').checked = true;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function handleCategorySubmit(e) {
+            e.preventDefault();
+            const editId = document.getElementById('cat-id-edit').value;
+            const vaultId = document.getElementById('cat-vault').value;
+            const name = document.getElementById('cat-name').value;
+            const target = parseFloat(document.getElementById('cat-target').value);
+            const icon = document.getElementById('cat-icon').value;
+            const allowRollover = document.getElementById('cat-rollover').checked;
+
+            if (editId) {
+                const cat = categories.find(c => c.id === editId);
+                if (cat) {
+                    cat.vaultId = vaultId;
+                    cat.name = name;
+                    cat.allocatedTarget = target;
+                    cat.icon = icon;
+                    cat.allowRollover = allowRollover;
+                }
+            } else {
+                const newCat = {
+                    id: 'cat_' + Date.now(),
+                    vaultId,
+                    name,
+                    allocatedTarget: target,
+                    allowRollover,
+                    icon,
+                    color: '#10b981',
+                    type: 'expense'
+                };
+                categories.push(newCat);
+            }
+
+            saveState();
+            populateCategoryDropdowns();
+            closeModal('modal-category');
+            showToast('Category envelope saved!', 'success');
+            renderApp();
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            saveState();
+            showToast('Transaction deleted', 'warning');
+            renderApp();
+        }
+
+        function deleteCategory(id) {
+            categories = categories.filter(c => c.id !== id);
+            transactions = transactions.filter(t => t.categoryId !== id);
+            saveState();
+            populateCategoryDropdowns();
+            showToast('Category deleted', 'warning');
+            renderApp();
+        }
+
+        function toggleCategoryRollover(categoryId) {
+            const cat = categories.find(c => c.id === categoryId);
+            if (cat) {
+                cat.allowRollover = !cat.allowRollover;
+                saveState();
+                showToast(`Rollover ${cat.allowRollover ? 'enabled' : 'disabled'} for ${cat.name}`, 'info');
+                renderApp();
+            }
+        }
+
+        function changeCurrency(newCurrency) {
+            if (!CURRENCIES[newCurrency]) return;
+            currentCurrency = newCurrency;
+            saveState();
+            syncCurrencySelectors();
+            renderApp();
+            showToast(`Currency updated to ${CURRENCIES[currentCurrency].name}`, 'info');
+        }
+
+        function changeDistributionChartMode(mode) {
+            activeChartDistributionMode = mode;
+            const labelsMap = {
+                spent: 'Actual Spent',
+                target: 'Assigned Target',
+                available: 'Remaining Available'
+            };
+            const labelEl = document.getElementById('chart-mode-label');
+            if (labelEl) labelEl.textContent = labelsMap[mode] || 'Actual Spent';
+            renderAnalytics();
+        }
+
+        function openDistributionModal() {
+            tempDistributionTargets = {};
+            getScopedCategories().filter(c => c.type === 'expense').forEach(c => {
+                tempDistributionTargets[c.id] = c.allocatedTarget || 0;
+            });
+            renderDistributionSliders();
+            document.getElementById('modal-distribution').classList.remove('hidden');
+        }
+
+        function renderDistributionSliders() {
+            const container = document.getElementById('distribution-sliders-container');
+            if (!container) return;
+
+            const expenseCats = getScopedCategories().filter(c => c.type === 'expense');
+            let totalAssigned = 0;
+            Object.values(tempDistributionTargets).forEach(v => totalAssigned += v);
+
+            document.getElementById('dist-total-assigned').textContent = formatCurrency(totalAssigned);
+
+            container.innerHTML = '';
+            expenseCats.forEach(cat => {
+                const currentVal = tempDistributionTargets[cat.id] || 0;
+                const percent = totalAssigned > 0 ? Math.round((currentVal / totalAssigned) * 100) : 0;
+                const maxVal = Math.max(50000, totalAssigned * 1.5, currentVal * 2);
+
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2';
+                item.innerHTML = `
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid ${cat.icon} text-brand-400"></i> ${cat.name}
+                        </span>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800 font-semibold">${percent}% of total</span>
+                            <div class="flex items-center gap-1">
+                                <span class="currency-symbol text-slate-400 text-xs">${CURRENCIES[currentCurrency]?.symbol || '฿'}</span>
+                                <input type="number" step="100" value="${currentVal}" onchange="updateTempDistributionInput('${cat.id}', this.value)" class="w-24 bg-slate-900 text-white font-bold text-xs px-2 py-1 rounded border border-slate-800 text-right focus:outline-none focus:border-brand-500">
+                            </div>
+                        </div>
+                    </div>
+                    <input type="range" min="0" max="${maxVal}" step="100" value="${currentVal}" oninput="updateTempDistribution('${cat.id}', this.value)" class="w-full accent-brand-500 bg-slate-900 rounded-lg cursor-pointer">
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function updateTempDistribution(catId, value) {
+            tempDistributionTargets[catId] = parseFloat(value) || 0;
+            renderDistributionSliders();
+        }
+
+        function updateTempDistributionInput(catId, value) {
+            tempDistributionTargets[catId] = Math.max(0, parseFloat(value) || 0);
+            renderDistributionSliders();
+        }
+
+        function applyDistributionPreset(presetType) {
+            const expenseCats = getScopedCategories().filter(c => c.type === 'expense');
+            if (expenseCats.length === 0) return;
+
+            const incomeCat = categories.find(c => c.type === 'income');
+            const totalBudgetPool = incomeCat ? (incomeCat.allocatedTarget || 100000) : 100000;
+
+            if (presetType === 'equal') {
+                const equalShare = Math.round(totalBudgetPool / expenseCats.length);
+                expenseCats.forEach(c => tempDistributionTargets[c.id] = equalShare);
+            } else if (presetType === '50-30-20') {
+                const needsAmount = totalBudgetPool * 0.50;
+                const wantsAmount = totalBudgetPool * 0.30;
+                const savingsAmount = totalBudgetPool * 0.20;
+
+                expenseCats.forEach(c => {
+                    const nameLower = c.name.toLowerCase();
+                    if (nameLower.includes('saving') || nameLower.includes('fund') || nameLower.includes('invest')) {
+                        tempDistributionTargets[c.id] = Math.round(savingsAmount);
+                    } else if (nameLower.includes('dining') || nameLower.includes('entertainment') || nameLower.includes('shop')) {
+                        tempDistributionTargets[c.id] = Math.round(wantsAmount / 2);
+                    } else {
+                        tempDistributionTargets[c.id] = Math.round(needsAmount / 3);
+                    }
+                });
+            }
+            renderDistributionSliders();
+            showToast(`Applied ${presetType === 'equal' ? 'Equal Spread' : '50/30/20 Rule'} preset`, 'info');
+        }
+
+        function saveDistributionCustomization() {
+            categories.forEach(c => {
+                if (tempDistributionTargets[c.id] !== undefined) {
+                    c.allocatedTarget = tempDistributionTargets[c.id];
+                }
+            });
+            saveState();
+            closeModal('modal-distribution');
+            renderApp();
+            showToast('Target distribution updated successfully!', 'success');
+        }
+
+        function syncCurrencySelectors() {
+            const headerSel = document.getElementById('header-currency-select');
+            const settingsSel = document.getElementById('settings-currency-select');
+            if (headerSel) headerSel.value = currentCurrency;
+            if (settingsSel) settingsSel.value = currentCurrency;
+
+            const currSymbol = CURRENCIES[currentCurrency]?.symbol || '฿';
+            document.querySelectorAll('.currency-symbol').forEach(el => el.textContent = currSymbol);
+        }
+
+        function formatCurrency(val) {
+            const curr = CURRENCIES[currentCurrency] || CURRENCIES.THB;
+            try {
+                return new Intl.NumberFormat(curr.locale, {
+                    style: 'currency',
+                    currency: curr.code,
+                    maximumFractionDigits: curr.code === 'JPY' ? 0 : 2
+                }).format(val || 0);
+            } catch (e) {
+                return `${curr.symbol}${(val || 0).toFixed(2)}`;
+            }
+        }
+
+        function openTransactionModal() {
+            document.getElementById('form-transaction').reset();
+            document.getElementById('tx-date').value = `${currentYearMonth}-15`;
+            document.getElementById('tx-vault').value = activeVaultId === 'ALL' ? 'vault_personal' : activeVaultId;
+            document.getElementById('modal-transaction').classList.remove('hidden');
+        }
+
+        function handleTransactionSubmit(e) {
+            e.preventDefault();
+            const vaultId = document.getElementById('tx-vault').value;
+            const type = document.querySelector('input[name="tx-type"]:checked').value;
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const payee = document.getElementById('tx-payee').value;
+            const categoryId = document.getElementById('tx-category').value;
+            const date = document.getElementById('tx-date').value;
+
+            const newTx = {
+                id: 'tx_' + Date.now(),
+                vaultId,
+                date,
+                payee,
+                categoryId,
+                amount,
+                type
+            };
+
+            transactions.push(newTx);
+            saveState();
+            closeModal('modal-transaction');
+            showToast('Transaction logged successfully', 'success');
+            renderApp();
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function exportJSONData() {
+            const data = { vaults, categories, transactions };
+            const jsonStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vaultflow_multi_finance_backup_${currentYearMonth}.json`;
+            a.click();
+            showToast('Backup JSON exported!', 'success');
+        }
+
+        function importJSONData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.categories && parsed.transactions) {
+                        vaults = parsed.vaults || [...DEFAULT_VAULTS];
+                        categories = parsed.categories;
+                        transactions = parsed.transactions;
+                        saveState();
+                        populateVaultDropdowns();
+                        populateCategoryDropdowns();
+                        renderApp();
+                        showToast('Multi-vault backup restored successfully!', 'success');
+                    } else {
+                        showToast('Unrecognized JSON structure.', 'rose');
+                    }
+                } catch (err) {
+                    showToast('Invalid JSON file format', 'rose');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function resetDataConfirmation() {
+            vaults = [...DEFAULT_VAULTS];
+            categories = [...DEFAULT_CATEGORIES];
+            transactions = [...DEFAULT_TRANSACTIONS];
+            activeVaultId = 'vault_personal';
+            currentCurrency = 'THB';
+            saveState();
+            populateVaultDropdowns();
+            populateCategoryDropdowns();
+            syncCurrencySelectors();
+            renderApp();
+            showToast('Multi-finance demo dataset restored!', 'info');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            const colors = {
+                success: 'bg-emerald-600 border-emerald-500',
+                warning: 'bg-amber-600 border-amber-500',
+                info: 'bg-blue-600 border-blue-500',
+                rose: 'bg-rose-600 border-rose-500'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-xl text-white text-xs font-semibold border shadow-2xl ${colors[type] || colors.info} transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        window.onload = function() {
+            initApp();
+        };
+    </script>
+</body>
+</html>
