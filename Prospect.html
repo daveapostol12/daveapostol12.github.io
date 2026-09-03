@@ -281,7 +281,7 @@
       </div>
 
       <div id="vaultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Vault cards -->
+        <!-- Vault cards with full action controls -->
       </div>
     </div>
 
@@ -460,15 +460,16 @@
     </div>
   </div>
 
-  <!-- MODAL: ADD VAULT -->
+  <!-- MODAL: ADD / EDIT VAULT -->
   <div id="modalVault" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-white">Create Financial Vault</h3>
+        <h3 id="vaultModalTitle" class="text-lg font-bold text-white">Create Financial Vault</h3>
         <button onclick="closeVaultModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
       <div class="space-y-4">
+        <input type="hidden" id="editVaultKey">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Vault / Profile Name</label>
           <input type="text" id="vaultNameInput" placeholder="Business Operations, Vacation Fund" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -476,7 +477,7 @@
 
         <div class="pt-2 flex justify-end space-x-2">
           <button onclick="closeVaultModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
-          <button onclick="submitVault()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500">Create Vault</button>
+          <button onclick="submitVault()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500">Save Vault</button>
         </div>
       </div>
     </div>
@@ -646,15 +647,12 @@
       const allowRollover = category.allowRollover;
       const initialRollover = category.rollover || 0;
 
-      // Extract all unique months up to targetMonthStr from transactions and assignments
       const baseMonth = '2026-03';
       
-      // Calculate spent in target month
       const spentThisMonth = appData.transactions
         .filter(t => t.vaultId === vault.id && t.categoryId === category.id && t.type === 'expense' && t.date && t.date.startsWith(targetMonthStr))
         .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
-      // Monthly assigned
       const assignedThisMonth = (category.monthlyAssigned && category.monthlyAssigned[targetMonthStr] !== undefined) 
         ? category.monthlyAssigned[targetMonthStr] 
         : (category.assigned || 0);
@@ -668,8 +666,6 @@
         };
       }
 
-      // If rollover is enabled, calculate accumulated rollover from past months
-      // Find all transaction months for this category prior to targetMonthStr
       const allTxMonths = appData.transactions
         .filter(t => t.vaultId === vault.id && t.categoryId === category.id && t.type === 'expense' && t.date && t.date < targetMonthStr)
         .map(t => t.date.substring(0, 7));
@@ -683,7 +679,6 @@
 
       let carryoverAccumulated = initialRollover;
 
-      // Iteratively compute net carried forward for prior months
       const sortedPriorMonths = Array.from(priorMonthsSet).sort();
       sortedPriorMonths.forEach(m => {
         if (m < targetMonthStr) {
@@ -717,7 +712,6 @@
         const vault = getActiveVault();
         vault.unallocatedBalance += amt;
         
-        // Log transaction for active month
         const todayStr = new Date().toISOString().split('T')[0];
         const dateToUse = todayStr.startsWith(appData.currentMonth) ? todayStr : `${appData.currentMonth}-01`;
 
@@ -903,22 +897,70 @@
       }
     }
 
-    function openAddVaultModal() { document.getElementById('modalVault').classList.remove('hidden'); }
+    function openAddVaultModal() {
+      document.getElementById('vaultModalTitle').innerText = "Create Financial Vault";
+      document.getElementById('editVaultKey').value = "";
+      document.getElementById('vaultNameInput').value = "";
+      document.getElementById('modalVault').classList.remove('hidden');
+    }
+
+    function editVault(vaultId) {
+      const v = appData.vaults.find(item => item.id === vaultId);
+      if (v) {
+        document.getElementById('vaultModalTitle').innerText = "Edit Vault Profile";
+        document.getElementById('editVaultKey').value = v.id;
+        document.getElementById('vaultNameInput').value = v.name;
+        document.getElementById('modalVault').classList.remove('hidden');
+      }
+    }
+
     function closeVaultModal() { document.getElementById('modalVault').classList.add('hidden'); }
 
     function submitVault() {
       const name = document.getElementById('vaultNameInput').value;
+      const editKey = document.getElementById('editVaultKey').value;
+
       if (name) {
-        const newVault = {
-          id: 'vault_' + Date.now(),
-          name,
-          unallocatedBalance: 0,
-          categories: []
-        };
-        appData.vaults.push(newVault);
-        appData.activeVaultId = newVault.id;
+        if (editKey) {
+          const v = appData.vaults.find(item => item.id === editKey);
+          if (v) v.name = name;
+        } else {
+          const newVault = {
+            id: 'vault_' + Date.now(),
+            name,
+            unallocatedBalance: 0,
+            categories: []
+          };
+          appData.vaults.push(newVault);
+          appData.activeVaultId = newVault.id;
+        }
         document.getElementById('vaultNameInput').value = '';
         closeVaultModal();
+        saveData();
+      }
+    }
+
+    function deleteVault(vaultId) {
+      if (appData.vaults.length <= 1) {
+        alert("Action restricted: You must maintain at least one active financial vault!");
+        return;
+      }
+
+      const vaultToDelete = appData.vaults.find(v => v.id === vaultId);
+      if (!vaultToDelete) return;
+
+      if (confirm(`Are you sure you want to delete vault "${vaultToDelete.name}"?\nAll associated categories and transactions will be permanently removed.`)) {
+        // Remove vault
+        appData.vaults = appData.vaults.filter(v => v.id !== vaultId);
+        
+        // Remove associated transactions
+        appData.transactions = appData.transactions.filter(t => t.vaultId !== vaultId);
+
+        // Switch active vault if deleting current
+        if (appData.activeVaultId === vaultId) {
+          appData.activeVaultId = appData.vaults[0].id;
+        }
+
         saveData();
       }
     }
@@ -1081,21 +1123,60 @@
         `;
       }).join('');
 
-      // Vaults Grid
+      // Vaults Grid with Edit & Delete Actions
       const vaultsGrid = document.getElementById('vaultsGrid');
-      vaultsGrid.innerHTML = appData.vaults.map(v => `
-        <div class="bg-slate-900/80 p-5 rounded-2xl border ${v.id === vault.id ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-slate-800'} space-y-3">
-          <div class="flex justify-between items-center">
-            <h3 class="font-bold text-white text-base">${v.name}</h3>
-            ${v.id === vault.id ? '<span class="text-[10px] font-black uppercase text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Active</span>' : ''}
+      vaultsGrid.innerHTML = appData.vaults.map(v => {
+        const vTxCount = appData.transactions.filter(t => t.vaultId === v.id).length;
+        const isActive = v.id === vault.id;
+        
+        return `
+          <div class="bg-slate-900/80 p-5 rounded-2xl border ${isActive ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-slate-800'} flex flex-col justify-between space-y-4 shadow-sm">
+            <div>
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center space-x-2">
+                  <h3 class="font-bold text-white text-base">${v.name}</h3>
+                  ${isActive ? '<span class="text-[9px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800">Active</span>' : ''}
+                </div>
+                <div class="flex items-center space-x-1">
+                  <button onclick="editVault('${v.id}')" title="Rename Vault" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center transition">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button onclick="deleteVault('${v.id}')" title="Delete Vault" class="w-7 h-7 rounded-lg bg-rose-950/70 hover:bg-rose-900 text-rose-400 text-xs flex items-center justify-center transition">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 text-xs text-slate-400 bg-slate-950 p-3 rounded-xl">
+                <div class="flex justify-between">
+                  <span>Envelopes:</span>
+                  <span class="text-white font-bold">${v.categories.length}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Recorded Transactions:</span>
+                  <span class="text-slate-300 font-semibold">${vTxCount}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Ready to Assign:</span>
+                  <span class="text-emerald-400 font-bold">${formatCurrency(v.unallocatedBalance)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              ${isActive ? `
+                <div class="w-full text-center bg-emerald-950/40 text-emerald-400 text-xs font-bold py-2.5 rounded-xl border border-emerald-800/60">
+                  <i class="fa-solid fa-check-circle me-1"></i> Currently Active
+                </div>
+              ` : `
+                <button onclick="switchVault('${v.id}')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2.5 rounded-xl border border-slate-700 transition">
+                  Switch to Vault
+                </button>
+              `}
+            </div>
           </div>
-          <div class="text-xs text-slate-400">Envelopes: <span class="text-white font-bold">${v.categories.length}</span></div>
-          <div class="text-xs text-slate-400">Ready to Assign: <span class="text-emerald-400 font-bold">${formatCurrency(v.unallocatedBalance)}</span></div>
-          <button onclick="switchVault('${v.id}')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 rounded-xl border border-slate-700 transition">
-            Switch to Vault
-          </button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function deleteTransaction(txId) {
