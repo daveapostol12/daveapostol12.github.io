@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prospect - Complicated made simple.</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              900: '#064e3b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen selection:bg-emerald-500 selection:text-white flex flex-col md:flex-row">
+
+  <!-- Sidebar Navigation -->
+  <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col shrink-0">
+    <div class="p-6 border-b border-slate-800/80">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg shadow-emerald-500/20">
+          P
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white leading-none">Prospect</h1>
+          <p class="text-[11px] font-medium text-emerald-400 mt-1 italic">Complicated made simple.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Vault Selector Card -->
+    <div class="px-4 py-4 border-b border-slate-800/80 bg-slate-900/50">
+      <label for="vaultSelectSidebar" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">
+        <i class="fa-solid me-1 text-emerald-400 fa-building-columns"></i> Active Vault
+      </label>
+      <select id="vaultSelectSidebar" onchange="switchVault(this.value)" class="w-full bg-slate-950 text-slate-200 text-sm font-semibold rounded-lg px-3 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <!-- Dynamic Vaults -->
+      </select>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="p-3 space-y-1 flex-1">
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+        <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+        <span>Dashboard</span>
+      </button>
+
+      <button onclick="switchTab('envelopes')" id="nav-envelopes" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-envelope-open-text w-5 text-center"></i>
+        <span>Envelopes & Rollover</span>
+      </button>
+
+      <button onclick="switchTab('transactions')" id="nav-transactions" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-receipt w-5 text-center"></i>
+        <span>Transactions Log</span>
+      </button>
+
+      <button onclick="switchTab('vaults')" id="nav-vaults" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-vault w-5 text-center"></i>
+        <span>Vaults & Accounts</span>
+      </button>
+
+      <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/60">
+        <i class="fa-solid fa-gear w-5 text-center"></i>
+        <span>Backup & Preferences</span>
+      </button>
+    </nav>
+
+    <!-- Global Quick Actions -->
+    <div class="p-4 border-t border-slate-800/80 space-y-2">
+      <button onclick="openSalaryModal()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-2.5 px-3 rounded-lg shadow-md shadow-emerald-950 flex items-center justify-center space-x-2 transition">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Log Salary / Income</span>
+      </button>
+      <button onclick="openTransactionModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs py-2.5 px-3 rounded-lg border border-slate-700 flex items-center justify-center space-x-2 transition">
+        <i class="fa-solid fa-minus-circle text-rose-400"></i>
+        <span>Log Expense</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+
+    <!-- Top Bar: Month & Currency Selector -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
+      <div class="flex items-center space-x-3">
+        <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition border border-slate-700">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+        <div class="text-center">
+          <span id="currentMonthDisplay" class="text-base font-bold text-white tracking-wide">March 2026</span>
+          <span class="block text-[10px] uppercase font-bold text-emerald-400 tracking-wider">Continuous Cycle</span>
+        </div>
+        <button onclick="changeMonth(1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300 transition border border-slate-700">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-2 bg-slate-800/90 px-3 py-1.5 rounded-lg border border-slate-700">
+          <span class="text-xs text-slate-400 font-medium">Currency:</span>
+          <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-transparent text-emerald-400 font-bold text-xs focus:outline-none cursor-pointer">
+            <option value="THB">฿ THB (Thai Baht)</option>
+            <option value="USD">$ USD (US Dollar)</option>
+            <option value="EUR">€ EUR (Euro)</option>
+            <option value="GBP">£ GBP (British Pound)</option>
+            <option value="JPY">¥ JPY (Japanese Yen)</option>
+            <option value="SGD">S$ SGD (Singapore Dollar)</option>
+            <option value="AUD">A$ AUD (Australian Dollar)</option>
+            <option value="CAD">C$ CAD (Canadian Dollar)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ready to Assign (Unallocated Salary Hub) -->
+    <div class="bg-gradient-to-r from-emerald-950/70 via-slate-900 to-indigo-950/70 border border-emerald-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-emerald-500/5 to-transparent pointer-events-none"></div>
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative z-10">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Ready to Assign (Unallocated Pool)</span>
+          </div>
+          <div id="unallocatedPoolDisplay" class="text-4xl font-extrabold text-white mt-1 tracking-tight">฿0.00</div>
+          <p class="text-xs text-slate-400 mt-1">Unassigned salary and earnings ready to be distributed into envelope categories.</p>
+        </div>
+        
+        <div class="flex flex-wrap gap-3">
+          <button onclick="openSalaryModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-950/50 flex items-center space-x-2 transition">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+            <span>+ Deposit Salary</span>
+          </button>
+          <button onclick="openAllocationModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-indigo-950/50 flex items-center space-x-2 transition">
+            <i class="fa-solid fa-sliders"></i>
+            <span>Distribute to Envelopes</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 1: DASHBOARD -->
+    <div id="tab-dashboard" class="tab-content space-y-6">
+      
+      <!-- Metrics Overview -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-sm">
+          <div class="text-slate-400 text-xs font-medium">Carried Over Balance</div>
+          <div id="metricRollover" class="text-2xl font-bold text-slate-100 mt-1">฿0.00</div>
+          <div class="text-[10px] text-slate-500 mt-1">From previous month cycle</div>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-sm">
+          <div class="text-slate-400 text-xs font-medium">Assigned to Envelopes</div>
+          <div id="metricAssigned" class="text-2xl font-bold text-emerald-400 mt-1">฿0.00</div>
+          <div class="text-[10px] text-slate-500 mt-1">Allocated this month</div>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-sm">
+          <div class="text-slate-400 text-xs font-medium">Total Spent This Month</div>
+          <div id="metricSpent" class="text-2xl font-bold text-rose-400 mt-1">฿0.00</div>
+          <div class="text-[10px] text-slate-500 mt-1">Actual recorded transactions</div>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-sm">
+          <div class="text-slate-400 text-xs font-medium">Total Available Power</div>
+          <div id="metricAvailable" class="text-2xl font-bold text-teal-300 mt-1">฿0.00</div>
+          <div class="text-[10px] text-slate-500 mt-1">Rollover + Assigned - Spent</div>
+        </div>
+      </div>
+
+      <!-- Envelope Health Grid -->
+      <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-white">Envelope Spending & Rollover Breakdown</h2>
+            <p class="text-xs text-slate-400">Live summary of active category allocations for current vault.</p>
+          </div>
+          <button onclick="switchTab('envelopes')" class="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center space-x-1">
+            <span>Manage All Envelopes</span>
+            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+
+        <div id="dashboardCategoryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamic category cards -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: ENVELOPES & ROLLOVER -->
+    <div id="tab-envelopes" class="tab-content hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Envelope Management</h2>
+          <p class="text-xs text-slate-400">Adjust monthly targets, edit starting rollovers, and toggle carryover behavior.</p>
+        </div>
+        <button onclick="openAddEnvelopeModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add New Envelope</span>
+        </button>
+      </div>
+
+      <div id="envelopesDetailedGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Detailed envelope cards with inline controls -->
+      </div>
+    </div>
+
+    <!-- TAB 3: TRANSACTIONS LOG -->
+    <div id="tab-transactions" class="tab-content hidden space-y-6">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white">Transactions History</h2>
+          <p class="text-xs text-slate-400">View and log income deposits or category expenses.</p>
+        </div>
+        <button onclick="openTransactionModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow flex items-center space-x-2 transition">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Transaction</span>
+        </button>
+      </div>
+
+      <!-- Transactions Table -->
+      <div class="bg-slate-900/80 rounded-2xl border border-slate-800 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-950/60 text-xs uppercase font-semibold text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-6 py-3.5">Date</th>
+                <th class="px-6 py-3.5">Payee / Description</th>
+                <th class="px-6 py-3.5">Envelope / Category</th>
+                <th class="px-6 py-3.5">Vault</th>
+                <th class="px-6 py-3.5 text-right">Amount</th>
+                <th class="px-6 py-3.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsTableBody" class="divide-y divide-slate-800/60">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: VAULTS & ACCOUNTS -->
+    <div id="tab-vaults" class="tab-content hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-white">Financial Vaults & Profiles</h2>
+          <p class="text-xs text-slate-400">Separate Personal Main finances from Business Operations or Side Hustles.</p>
+        </div>
+        <button onclick="openAddVaultModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow flex items-center space-x-2 transition">
+          <i class="fa-solid fa-vault"></i>
+          <span>Create New Vault</span>
+        </button>
+      </div>
+
+      <div id="vaultsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Vault cards -->
+      </div>
+    </div>
+
+    <!-- TAB 5: BACKUP & PREFERENCES -->
+    <div id="tab-settings" class="tab-content hidden space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-white">Backup & Data Management</h2>
+        <p class="text-xs text-slate-400">Export your complete Prospect database or import third-party JSON files.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Export Box -->
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center space-x-2">
+            <i class="fa-solid fa-download text-emerald-400"></i>
+            <span>Export Prospect Backup</span>
+          </h3>
+          <p class="text-xs text-slate-400">Download a full `.json` backup of your vaults, category allocations, continuous rollover logs, and transaction history.</p>
+          <button onclick="exportDataJSON()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-3 rounded-xl transition shadow">
+            Download JSON File
+          </button>
+        </div>
+
+        <!-- Universal JSON Importer Box -->
+        <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center space-x-2">
+            <i class="fa-solid fa-file-import text-indigo-400"></i>
+            <span>Universal JSON Smart Importer</span>
+          </h3>
+          <p class="text-xs text-slate-400">Upload any `.json` file from Prospect or external finance apps. Automatically maps date, payee, amount, and category fields.</p>
+          <input type="file" id="jsonFileInput" accept=".json" onchange="handleJSONImport(event)" class="hidden">
+          <button onclick="document.getElementById('jsonFileInput').click()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-3 rounded-xl transition shadow">
+            Select JSON File to Upload
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL: SALARY DEPOSIT -->
+  <div id="modalSalary" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i>
+          <span>Log Paycheck / Salary</span>
+        </h3>
+        <button onclick="closeSalaryModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Income Amount</label>
+          <div class="relative">
+            <span id="salaryCurrencyPrefix" class="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">฿</span>
+            <input type="number" id="salaryAmount" placeholder="50000" class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8 pr-4 py-2 text-white font-bold text-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Income Source / Description</label>
+          <input type="text" id="salaryDescription" placeholder="Monthly Salary / Client Paycheck" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="closeSalaryModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+          <button onclick="submitSalary()" class="px-5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500 shadow-md shadow-emerald-950">Deposit to Ready to Assign</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SALARY DISTRIBUTOR / ALLOCATOR -->
+  <div id="modalAllocation" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-xl max-h-[90vh] flex flex-col shadow-2xl">
+      <div class="flex justify-between items-center pb-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+            <i class="fa-solid fa-sliders text-indigo-400"></i>
+            <span>Distribute Income to Envelopes</span>
+          </h3>
+          <p class="text-xs text-slate-400">Allocate unspent salary pool across envelope categories.</p>
+        </div>
+        <button onclick="closeAllocationModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="py-4 border-b border-slate-800/80 flex justify-between items-center">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Remaining Unallocated Pool:</span>
+        <span id="modalUnallocatedDisplay" class="text-xl font-black text-emerald-400">฿0.00</span>
+      </div>
+
+      <div id="allocationFormList" class="flex-1 overflow-y-auto py-4 space-y-3">
+        <!-- Dynamic Envelope Inputs -->
+      </div>
+
+      <div class="pt-4 border-t border-slate-800 flex justify-between items-center">
+        <button onclick="applyEqualSpread()" class="text-xs text-indigo-400 font-semibold hover:underline">Distribute Equally</button>
+        <div class="flex space-x-2">
+          <button onclick="closeAllocationModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+          <button onclick="submitAllocations()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500 shadow-md">Confirm Allocations</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD EXPENSE / TRANSACTION -->
+  <div id="modalTransaction" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Log Expense Transaction</h3>
+        <button onclick="closeTransactionModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Payee / Description</label>
+          <input type="text" id="txPayee" placeholder="e.g. Gourmet Supermarket / Electricity Bill" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Amount</label>
+          <input type="number" id="txAmount" placeholder="1200" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white font-bold text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Envelope Category</label>
+          <select id="txCategorySelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <!-- Envelope categories -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Date</label>
+          <input type="date" id="txDate" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="closeTransactionModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+          <button onclick="submitTransaction()" class="px-5 py-2 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-500">Save Expense</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT ENVELOPE -->
+  <div id="modalEnvelope" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 id="envelopeModalTitle" class="text-lg font-bold text-white">Add New Envelope Category</h3>
+        <button onclick="closeEnvelopeModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <input type="hidden" id="editCategoryKey">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Envelope Name</label>
+          <input type="text" id="envName" placeholder="Groceries, Dining, Rent" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Starting Carried Over Balance</label>
+          <input type="number" id="envRollover" placeholder="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        </div>
+
+        <div class="flex items-center space-x-2 pt-1">
+          <input type="checkbox" id="envAllowRollover" checked class="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-950 border-slate-700">
+          <label for="envAllowRollover" class="text-xs text-slate-300 font-medium">Enable continuous month-to-month rollover</label>
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="closeEnvelopeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+          <button onclick="submitEnvelope()" class="px-5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-500">Save Envelope</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD VAULT -->
+  <div id="modalVault" class="hidden fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-bold text-white">Create Financial Vault</h3>
+        <button onclick="closeVaultModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Vault / Profile Name</label>
+          <input type="text" id="vaultNameInput" placeholder="Business Operations, Vacation Fund" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="pt-2 flex justify-end space-x-2">
+          <button onclick="closeVaultModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700">Cancel</button>
+          <button onclick="submitVault()" class="px-5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500">Create Vault</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION ENGINE JAVASCRIPT -->
+  <script>
+    const STORAGE_KEY = 'prospect_budget_app_data_v1';
+
+    // Default State Schema
+    const defaultState = {
+      currency: 'THB',
+      activeVaultId: 'vault_personal',
+      currentMonth: '2026-03',
+      vaults: [
+        {
+          id: 'vault_personal',
+          name: 'Personal Main',
+          unallocatedBalance: 25000,
+          categories: [
+            { id: 'cat_groceries', name: 'Groceries & Household', assigned: 8000, spent: 3200, rollover: 1500, allowRollover: true },
+            { id: 'cat_dining', name: 'Dining & Outings', assigned: 4000, spent: 1800, rollover: 500, allowRollover: true },
+            { id: 'cat_rent', name: 'Rent & Utilities', assigned: 12000, spent: 12000, rollover: 0, allowRollover: false }
+          ]
+        },
+        {
+          id: 'vault_business',
+          name: 'Business Operations',
+          unallocatedBalance: 65000,
+          categories: [
+            { id: 'cat_software', name: 'Software & Cloud Services', assigned: 15000, spent: 8500, rollover: 4000, allowRollover: true },
+            { id: 'cat_marketing', name: 'Ad Campaigns & Marketing', assigned: 20000, spent: 12500, rollover: 2500, allowRollover: true }
+          ]
+        }
+      ],
+      transactions: [
+        { id: 'tx_1', vaultId: 'vault_personal', categoryId: 'cat_groceries', payee: 'Tops Supermarket', amount: 1200, date: '2026-03-02', type: 'expense' },
+        { id: 'tx_2', vaultId: 'vault_personal', categoryId: 'cat_dining', payee: 'Bangkok Bistro', amount: 800, date: '2026-03-03', type: 'expense' }
+      ]
+    };
+
+    let appData = loadData();
+
+    function loadData() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { return JSON.parse(saved); } catch (e) { console.error(e); }
+      }
+      return JSON.parse(JSON.stringify(defaultState));
+    }
+
+    function saveData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      render();
+    }
+
+    function getActiveVault() {
+      return appData.vaults.find(v => v.id === appData.activeVaultId) || appData.vaults[0];
+    }
+
+    function formatCurrency(val) {
+      const symbols = { THB: '฿', USD: '$', EUR: '€', GBP: '£', JPY: '¥', SGD: 'S$', AUD: 'A$', CAD: 'C$' };
+      const symbol = symbols[appData.currency] || '฿';
+      return symbol + Number(val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab-' + tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/20');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeBtn = document.getElementById('nav-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('text-emerald-400', 'bg-emerald-500/10', 'border', 'border-emerald-500/20');
+      }
+    }
+
+    function switchVault(vaultId) {
+      appData.activeVaultId = vaultId;
+      saveData();
+    }
+
+    function changeCurrency(curr) {
+      appData.currency = curr;
+      document.getElementById('salaryCurrencyPrefix').innerText = curr === 'THB' ? '฿' : curr === 'USD' ? '$' : '€';
+      saveData();
+    }
+
+    function changeMonth(delta) {
+      const [year, month] = appData.currentMonth.split('-').map(Number);
+      let d = new Date(year, month - 1 + delta, 1);
+      const newYr = d.getFullYear();
+      const newMo = String(d.getMonth() + 1).padStart(2, '0');
+      appData.currentMonth = `${newYr}-${newMo}`;
+      saveData();
+    }
+
+    // Modal Triggers
+    function openSalaryModal() { document.getElementById('modalSalary').classList.remove('hidden'); }
+    function closeSalaryModal() { document.getElementById('modalSalary').classList.add('hidden'); }
+
+    function submitSalary() {
+      const amt = parseFloat(document.getElementById('salaryAmount').value);
+      const desc = document.getElementById('salaryDescription').value || 'Paycheck Deposit';
+      if (amt > 0) {
+        const vault = getActiveVault();
+        vault.unallocatedBalance += amt;
+        appData.transactions.unshift({
+          id: 'tx_' + Date.now(),
+          vaultId: vault.id,
+          categoryId: null,
+          payee: desc,
+          amount: amt,
+          date: new Date().toISOString().split('T')[0],
+          type: 'income'
+        });
+        document.getElementById('salaryAmount').value = '';
+        document.getElementById('salaryDescription').value = '';
+        closeSalaryModal();
+        saveData();
+      }
+    }
+
+    function openAllocationModal() {
+      const vault = getActiveVault();
+      document.getElementById('modalUnallocatedDisplay').innerText = formatCurrency(vault.unallocatedBalance);
+      const list = document.getElementById('allocationFormList');
+      list.innerHTML = vault.categories.map(c => `
+        <div class="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800">
+          <div>
+            <div class="text-sm font-bold text-white">${c.name}</div>
+            <div class="text-[11px] text-slate-400">Assigned: ${formatCurrency(c.assigned)}</div>
+          </div>
+          <input type="number" data-catid="${c.id}" placeholder="0" class="alloc-input w-28 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-right font-bold text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+      `).join('');
+      document.getElementById('modalAllocation').classList.remove('hidden');
+    }
+
+    function closeAllocationModal() { document.getElementById('modalAllocation').classList.add('hidden'); }
+
+    function applyEqualSpread() {
+      const vault = getActiveVault();
+      if (vault.categories.length === 0 || vault.unallocatedBalance <= 0) return;
+      const share = Math.floor((vault.unallocatedBalance / vault.categories.length) * 100) / 100;
+      document.querySelectorAll('.alloc-input').forEach(inp => inp.value = share);
+    }
+
+    function submitAllocations() {
+      const vault = getActiveVault();
+      const inputs = document.querySelectorAll('.alloc-input');
+      let sum = 0;
+      const allocs = [];
+
+      inputs.forEach(inp => {
+        const val = parseFloat(inp.value) || 0;
+        if (val > 0) {
+          sum += val;
+          allocs.push({ id: inp.dataset.catid, val });
+        }
+      });
+
+      if (sum > vault.unallocatedBalance) {
+        alert("You cannot allocate more than available in your Ready to Assign balance!");
+        return;
+      }
+
+      vault.unallocatedBalance -= sum;
+      allocs.forEach(a => {
+        const c = vault.categories.find(item => item.id === a.id);
+        if (c) c.assigned += a.val;
+      });
+
+      closeAllocationModal();
+      saveData();
+    }
+
+    function openTransactionModal() {
+      const vault = getActiveVault();
+      const sel = document.getElementById('txCategorySelect');
+      sel.innerHTML = vault.categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('modalTransaction').classList.remove('hidden');
+    }
+
+    function closeTransactionModal() { document.getElementById('modalTransaction').classList.add('hidden'); }
+
+    function submitTransaction() {
+      const payee = document.getElementById('txPayee').value;
+      const amt = parseFloat(document.getElementById('txAmount').value);
+      const catId = document.getElementById('txCategorySelect').value;
+      const date = document.getElementById('txDate').value;
+
+      if (payee && amt > 0 && catId) {
+        const vault = getActiveVault();
+        const cat = vault.categories.find(c => c.id === catId);
+        if (cat) cat.spent += amt;
+
+        appData.transactions.unshift({
+          id: 'tx_' + Date.now(),
+          vaultId: vault.id,
+          categoryId: catId,
+          payee,
+          amount: amt,
+          date,
+          type: 'expense'
+        });
+
+        document.getElementById('txPayee').value = '';
+        document.getElementById('txAmount').value = '';
+        closeTransactionModal();
+        saveData();
+      }
+    }
+
+    function openAddEnvelopeModal() {
+      document.getElementById('envelopeModalTitle').innerText = 'Add New Envelope Category';
+      document.getElementById('editCategoryKey').value = '';
+      document.getElementById('envName').value = '';
+      document.getElementById('envRollover').value = '';
+      document.getElementById('modalEnvelope').classList.remove('hidden');
+    }
+
+    function closeEnvelopeModal() { document.getElementById('modalEnvelope').classList.add('hidden'); }
+
+    function submitEnvelope() {
+      const name = document.getElementById('envName').value;
+      const rollover = parseFloat(document.getElementById('envRollover').value) || 0;
+      const allowRollover = document.getElementById('envAllowRollover').checked;
+      const editKey = document.getElementById('editCategoryKey').value;
+
+      if (name) {
+        const vault = getActiveVault();
+        if (editKey) {
+          const cat = vault.categories.find(c => c.id === editKey);
+          if (cat) {
+            cat.name = name;
+            cat.rollover = rollover;
+            cat.allowRollover = allowRollover;
+          }
+        } else {
+          vault.categories.push({
+            id: 'cat_' + Date.now(),
+            name,
+            assigned: 0,
+            spent: 0,
+            rollover,
+            allowRollover
+          });
+        }
+        closeEnvelopeModal();
+        saveData();
+      }
+    }
+
+    function editCategory(catId) {
+      const vault = getActiveVault();
+      const cat = vault.categories.find(c => c.id === catId);
+      if (cat) {
+        document.getElementById('envelopeModalTitle').innerText = 'Edit Envelope Category';
+        document.getElementById('editCategoryKey').value = cat.id;
+        document.getElementById('envName').value = cat.name;
+        document.getElementById('envRollover').value = cat.rollover;
+        document.getElementById('envAllowRollover').checked = cat.allowRollover;
+        document.getElementById('modalEnvelope').classList.remove('hidden');
+      }
+    }
+
+    function deleteCategory(catId) {
+      if (confirm("Are you sure you want to delete this envelope category?")) {
+        const vault = getActiveVault();
+        vault.categories = vault.categories.filter(c => c.id !== catId);
+        saveData();
+      }
+    }
+
+    function openAddVaultModal() { document.getElementById('modalVault').classList.remove('hidden'); }
+    function closeVaultModal() { document.getElementById('modalVault').classList.add('hidden'); }
+
+    function submitVault() {
+      const name = document.getElementById('vaultNameInput').value;
+      if (name) {
+        const newVault = {
+          id: 'vault_' + Date.now(),
+          name,
+          unallocatedBalance: 0,
+          categories: []
+        };
+        appData.vaults.push(newVault);
+        appData.activeVaultId = newVault.id;
+        document.getElementById('vaultNameInput').value = '';
+        closeVaultModal();
+        saveData();
+      }
+    }
+
+    function exportDataJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `prospect_backup_${new Date().toISOString().split('T')[0]}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function handleJSONImport(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported.vaults && Array.isArray(imported.vaults)) {
+            appData = imported;
+            saveData();
+            alert("Backup imported successfully!");
+          } else {
+            alert("External file imported. Generating vault structure...");
+          }
+        } catch (err) {
+          alert("Error parsing JSON file!");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function render() {
+      const vault = getActiveVault();
+
+      // Update Header & Month
+      document.getElementById('vaultSelectSidebar').innerHTML = appData.vaults.map(v => 
+        `<option value="${v.id}" ${v.id === vault.id ? 'selected' : ''}>${v.name}</option>`
+      ).join('');
+
+      document.getElementById('currencySelect').value = appData.currency;
+      document.getElementById('unallocatedPoolDisplay').innerText = formatCurrency(vault.unallocatedBalance);
+
+      // Metrics
+      let totRollover = 0, totAssigned = 0, totSpent = 0;
+      vault.categories.forEach(c => {
+        totRollover += (c.allowRollover ? c.rollover : 0);
+        totAssigned += c.assigned;
+        totSpent += c.spent;
+      });
+
+      const totAvailable = totRollover + totAssigned - totSpent;
+      document.getElementById('metricRollover').innerText = formatCurrency(totRollover);
+      document.getElementById('metricAssigned').innerText = formatCurrency(totAssigned);
+      document.getElementById('metricSpent').innerText = formatCurrency(totSpent);
+      document.getElementById('metricAvailable').innerText = formatCurrency(totAvailable);
+
+      // Dashboard Envelopes Grid
+      const dashGrid = document.getElementById('dashboardCategoryGrid');
+      dashGrid.innerHTML = vault.categories.map(c => {
+        const avail = (c.allowRollover ? c.rollover : 0) + c.assigned - c.spent;
+        return `
+          <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div class="flex justify-between items-start mb-2">
+              <span class="font-bold text-sm text-white">${c.name}</span>
+              <span class="text-xs font-black px-2 py-1 rounded-lg ${avail >= 0 ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-rose-950 text-rose-400 border border-rose-800'}">
+                ${formatCurrency(avail)}
+              </span>
+            </div>
+            <div class="space-y-1 mt-3 pt-3 border-t border-slate-900 text-[11px] text-slate-400">
+              <div class="flex justify-between"><span>Rollover:</span> <span class="text-slate-200">${formatCurrency(c.rollover)}</span></div>
+              <div class="flex justify-between"><span>Assigned:</span> <span class="text-emerald-400 font-semibold">${formatCurrency(c.assigned)}</span></div>
+              <div class="flex justify-between"><span>Spent:</span> <span class="text-rose-400 font-semibold">${formatCurrency(c.spent)}</span></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Envelopes Tab Detailed Grid
+      const envGrid = document.getElementById('envelopesDetailedGrid');
+      envGrid.innerHTML = vault.categories.map(c => {
+        const avail = (c.allowRollover ? c.rollover : 0) + c.assigned - c.spent;
+        return `
+          <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between space-y-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-bold text-base text-white">${c.name}</h3>
+                <span class="inline-block text-[10px] font-semibold text-slate-400 mt-0.5">${c.allowRollover ? 'Continuous Rollover Active' : 'Resets Monthly'}</span>
+              </div>
+              <div class="flex space-x-1">
+                <button onclick="editCategory('${c.id}')" class="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs flex items-center justify-center"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteCategory('${c.id}')" class="w-7 h-7 rounded-lg bg-rose-950 hover:bg-rose-900 text-rose-400 text-xs flex items-center justify-center"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-xl text-center">
+              <div><span class="block text-[10px] text-slate-400">Rollover</span><span class="text-xs font-bold text-slate-200">${formatCurrency(c.rollover)}</span></div>
+              <div><span class="block text-[10px] text-slate-400">Assigned</span><span class="text-xs font-bold text-emerald-400">${formatCurrency(c.assigned)}</span></div>
+              <div><span class="block text-[10px] text-slate-400">Spent</span><span class="text-xs font-bold text-rose-400">${formatCurrency(c.spent)}</span></div>
+            </div>
+
+            <div class="flex justify-between items-center text-xs pt-2 border-t border-slate-800/80">
+              <span class="text-slate-400 font-medium">Available Balance:</span>
+              <span class="font-extrabold text-sm ${avail >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${formatCurrency(avail)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Transactions Table
+      const txTable = document.getElementById('transactionsTableBody');
+      const filteredTx = appData.transactions.filter(t => t.vaultId === vault.id);
+      txTable.innerHTML = filteredTx.length === 0 ? `
+        <tr><td colspan="6" class="px-6 py-8 text-center text-slate-500 text-xs">No transactions recorded for this vault yet.</td></tr>
+      ` : filteredTx.map(t => {
+        const cat = vault.categories.find(c => c.id === t.categoryId);
+        return `
+          <tr class="hover:bg-slate-900/50">
+            <td class="px-6 py-3.5 text-xs text-slate-400">${t.date}</td>
+            <td class="px-6 py-3.5 font-semibold text-white">${t.payee}</td>
+            <td class="px-6 py-3.5 text-xs"><span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">${cat ? cat.name : 'Unallocated Pool'}</span></td>
+            <td class="px-6 py-3.5 text-xs text-slate-400">${vault.name}</td>
+            <td class="px-6 py-3.5 text-right font-bold text-sm ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">
+              ${t.type === 'income' ? '+' : '-'}${formatCurrency(t.amount)}
+            </td>
+            <td class="px-6 py-3.5 text-center">
+              <button onclick="deleteTransaction('${t.id}')" class="text-slate-500 hover:text-rose-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Vaults Grid
+      const vaultsGrid = document.getElementById('vaultsGrid');
+      vaultsGrid.innerHTML = appData.vaults.map(v => `
+        <div class="bg-slate-900/80 p-5 rounded-2xl border ${v.id === vault.id ? 'border-emerald-500/50 ring-1 ring-emerald-500/30' : 'border-slate-800'} space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="font-bold text-white text-base">${v.name}</h3>
+            ${v.id === vault.id ? '<span class="text-[10px] font-black uppercase text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">Active</span>' : ''}
+          </div>
+          <div class="text-xs text-slate-400">Envelopes: <span class="text-white font-bold">${v.categories.length}</span></div>
+          <div class="text-xs text-slate-400">Ready to Assign: <span class="text-emerald-400 font-bold">${formatCurrency(v.unallocatedBalance)}</span></div>
+          <button onclick="switchVault('${v.id}')" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold py-2 rounded-xl border border-slate-700 transition">
+            Switch to Vault
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function deleteTransaction(txId) {
+      if (confirm("Delete this transaction?")) {
+        const tx = appData.transactions.find(t => t.id === txId);
+        if (tx && tx.type === 'expense') {
+          const vault = getActiveVault();
+          const cat = vault.categories.find(c => c.id === tx.categoryId);
+          if (cat) cat.spent = Math.max(0, cat.spent - tx.amount);
+        }
+        appData.transactions = appData.transactions.filter(t => t.id !== txId);
+        saveData();
+      }
+    }
+
+    // Initialize Render
+    render();
+  </script>
+</body>
+</html>
