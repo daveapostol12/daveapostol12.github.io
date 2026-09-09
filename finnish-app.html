@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finnish Survival Language App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 47, 108, 0.1);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            border-top: 8px solid #002F6C;
+        }
+        .card {
+            background-color: #f1f5f9;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+            text-align: center;
+        }
+        .btn-primary {
+            background-color: #002F6C;
+            color: #ffffff;
+            border: 2px solid #002F6C;
+        }
+        .btn-primary:hover {
+            background-color: #00224d;
+            border-color: #00224d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 47, 108, 0.4);
+        }
+        .btn-secondary {
+            background-color: #ffffff;
+            color: #002F6C;
+            border: 2px solid #002F6C;
+        }
+        .btn-secondary:hover {
+            background-color: #e6f0fa;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 47, 108, 0.2);
+        }
+        .connect-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .connect-item {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid #cbd5e1;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+            text-align: center;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .connect-item.selected {
+            background-color: #e6f0fa;
+            border-color: #002F6C;
+        }
+        .connect-item.correct {
+            background-color: #d1fae5;
+            border-color: #10b981;
+        }
+        .connect-item.incorrect {
+            background-color: #fee2e2;
+            border-color: #ef4444;
+        }
+        .pronunciation {
+            font-style: italic;
+            color: #64748b;
+            font-size: 0.9em;
+            margin-top: 0.25rem;
+        }
+        .mcq-option {
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        .mcq-option .main-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container" class="container">
+        <h1 class="text-3xl font-bold text-center text-[#002F6C] mb-2">Finnish Survival App</h1>
+
+        <div id="welcome-screen" class="text-center p-8 bg-blue-50/50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Learn to Survive in Finland!</h2>
+            <p class="text-gray-600 mb-6">Master essential phrases for ordering food, basic conversation, and small talk.</p>
+
+            <div class="mb-8">
+                <h3 class="font-semibold mb-3 text-gray-700">Select Practice Mode:</h3>
+                <div class="flex flex-col sm:flex-row justify-center gap-3">
+                    <button class="btn btn-secondary mode-btn" data-mode="en-fi">English to Finnish</button>
+                    <button class="btn btn-secondary mode-btn" data-mode="fi-en">Finnish to English</button>
+                    <button class="btn btn-primary mode-btn" data-mode="mixed">Mixed</button>
+                </div>
+            </div>
+
+            <button id="start-game-btn" class="btn btn-primary w-full max-w-xs text-lg">Start Learning</button>
+        </div>
+
+        <div id="question-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4 text-sm sm:text-base">
+                <span id="score" class="font-semibold text-gray-700">Score: 0</span>
+                <span id="tier-display" class="font-bold text-[#002F6C] bg-blue-100 px-3 py-1 rounded-full">Level: Easy</span>
+                <span id="question-counter" class="font-semibold text-gray-700">Question: 1/15</span>
+            </div>
+
+            <div id="question-card" class="card">
+                <div id="question-content" class="text-xl text-center text-gray-800 font-bold"></div>
+                <div id="question-pronunciation" class="text-center pronunciation mb-2 hidden"></div>
+
+                <div id="options-container" class="flex flex-col gap-3 mt-4 hidden"></div>
+
+                <div id="flashcard-answer" class="hidden flex flex-col items-center mt-4 p-6 bg-white rounded-lg border-2 border-[#002F6C]">
+                    <div id="fc-text" class="text-2xl font-bold text-[#002F6C] text-center"></div>
+                    <div id="fc-pronunciation" class="pronunciation text-lg mt-2 text-center"></div>
+                </div>
+
+                <div id="connect-dots-container" class="hidden connect-list mt-4"></div>
+
+                <div id="flashcard-buttons" class="hidden flex justify-center gap-4 mt-6">
+                    <button id="show-answer-btn" class="btn btn-primary w-full md:w-auto">Show Answer</button>
+                    <button id="next-flashcard-btn" class="btn btn-secondary w-full md:w-auto hidden">Next Question</button>
+                </div>
+            </div>
+            <div id="feedback" class="mt-4 text-center font-semibold text-lg h-6"></div>
+        </div>
+
+        <div id="end-screen" class="hidden text-center p-8 bg-green-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-bold text-[#002F6C] mb-4">Hyvin tehty! (Well done!)</h2>
+            <p id="final-score" class="text-xl text-gray-700 mb-6"></p>
+            <button id="restart-game-btn" class="btn btn-primary">Practice Again</button>
+        </div>
+    </div>
+
+    <script>
+        const vocabulary = {
+            easy: [
+                { en: "Hello", fi: "Hei", pron: "hay" },
+                { en: "Thank you", fi: "Kiitos", pron: "kee-tohs" },
+                { en: "Yes", fi: "Kyllä", pron: "kewl-la" },
+                { en: "No", fi: "Ei", pron: "ay" },
+                { en: "Please", fi: "Ole hyvä", pron: "oh-leh hew-va" },
+                { en: "Sorry", fi: "Anteeksi", pron: "ahn-tehk-see" },
+                { en: "Good morning", fi: "Huomenta", pron: "huo-men-tah" },
+                { en: "Goodbye", fi: "Moi moi", pron: "moy moy" },
+                { en: "Water", fi: "Vesi", pron: "veh-see" },
+                { en: "Coffee", fi: "Kahvi", pron: "kah-vee" }
+            ],
+            medium: [
+                { en: "How are you?", fi: "Mitä kuuluu?", pron: "mee-ta koo-loo" },
+                { en: "I don't understand", fi: "En ymmärrä", pron: "en ew-mar-ra" },
+                { en: "Do you speak English?", fi: "Puhutko englantia?", pron: "poo-hut-ko eng-lahn-tee-ah" },
+                { en: "Where is the toilet?", fi: "Missä on vessa?", pron: "mis-sa on ves-sah" },
+                { en: "How much does this cost?", fi: "Mitä tämä maksaa?", pron: "mee-ta ta-ma mahk-sah" },
+                { en: "I would like a coffee", fi: "Saisinko kahvin", pron: "sigh-sin-ko kah-vin" },
+                { en: "The check, please", fi: "Lasku, kiitos", pron: "lahs-koo, kee-tohs" },
+                { en: "My name is...", fi: "Minun nimeni on...", pron: "mee-noon nee-meh-nee on" },
+                { en: "Nice to meet you", fi: "Hauska tutustua", pron: "hows-kah too-toos-too-ah" },
+                { en: "I am a student", fi: "Olen opiskelija", pron: "oh-len oh-pis-keh-lee-yah" }
+            ],
+            hard: [
+                { en: "Could I have the menu, please?", fi: "Saisinko ruokalistan, kiitos?", pron: "sigh-sin-ko ruo-kah-lis-tahn, kee-tohs" },
+                { en: "I am allergic to nuts.", fi: "Olen allerginen pähkinöille.", pron: "oh-len ahl-ler-gee-nen pah-kee-noil-leh" },
+                { en: "Can I pay with a card?", fi: "Voinko maksaa kortilla?", pron: "voin-ko mahk-sah kor-til-lah" },
+                { en: "What do you recommend?", fi: "Mitä suosittelet?", pron: "mee-ta suo-sit-teh-let" },
+                { en: "I study at the university.", fi: "Opiskelen yliopistossa.", pron: "oh-pis-keh-len ew-lee-oh-pis-tos-sah" },
+                { en: "Could you speak a little slower?", fi: "Voisitko puhua hieman hitaammin?", pron: "voy-sit-ko poo-hoo-ah hee-eh-mahn hee-tahm-min" },
+                { en: "It is very cold today.", fi: "Tänään on todella kylmä.", pron: "ta-nan on toh-del-lah kewl-ma" },
+                { en: "Where is the nearest grocery store?", fi: "Missä on lähin ruokakauppa?", pron: "mis-sa on la-hin ruo-kah-kowp-pah" },
+                { en: "I need to go to the pharmacy.", fi: "Minun täytyy mennä apteekkiin.", pron: "mee-noon tay-tew men-na ahp-tehk-kin" },
+                { en: "Thank you for the delicious food.", fi: "Kiitos herkullisesta ruoasta.", pron: "kee-tohs her-kool-lee-ses-tah ruo-ahs-tah" }
+            ]
+        };
+
+        let currentMode = 'mixed'; // 'en-fi', 'fi-en', 'mixed'
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswerShown = false;
+        let selectedConnectItems = [];
+
+        // Helper functions
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Mode selection logic
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        modeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                modeBtns.forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-secondary');
+                });
+                e.target.classList.remove('btn-secondary');
+                e.target.classList.add('btn-primary');
+                currentMode = e.target.dataset.mode;
+            });
+        });
+
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const questionScreen = document.getElementById('question-screen');
+        const endScreen = document.getElementById('end-screen');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const restartGameBtn = document.getElementById('restart-game-btn');
+        const questionContent = document.getElementById('question-content');
+        const questionPronunciation = document.getElementById('question-pronunciation');
+        const optionsContainer = document.getElementById('options-container');
+        const flashcardAnswer = document.getElementById('flashcard-answer');
+        const fcText = document.getElementById('fc-text');
+        const fcPronunciation = document.getElementById('fc-pronunciation');
+        const connectDotsContainer = document.getElementById('connect-dots-container');
+        const flashcardButtons = document.getElementById('flashcard-buttons');
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const nextFlashcardBtn = document.getElementById('next-flashcard-btn');
+        const feedback = document.getElementById('feedback');
+        const scoreElement = document.getElementById('score');
+        const tierDisplay = document.getElementById('tier-display');
+        const questionCounter = document.getElementById('question-counter');
+        const finalScoreElement = document.getElementById('final-score');
+
+        function generateQuestions() {
+            let questions = [];
+
+            // 5 Easy MCQ
+            let easyVocab = shuffleArray([...vocabulary.easy]).slice(0, 5);
+            easyVocab.forEach(v => {
+                let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
+
+                let correctAnswer = isEnToFi ? v.fi : v.en;
+                let correctPron = isEnToFi ? v.pron : null;
+                let questionText = isEnToFi ? v.en : v.fi;
+                let questionPron = isEnToFi ? null : v.pron;
+
+                let otherOptions = vocabulary.easy.filter(item => item !== v);
+                otherOptions = shuffleArray(otherOptions).slice(0, 3);
+
+                let options = otherOptions.map(opt => ({
+                    text: isEnToFi ? opt.fi : opt.en,
+                    pron: isEnToFi ? opt.pron : null
+                }));
+                options.push({ text: correctAnswer, pron: correctPron });
+
+                questions.push({
+                    type: 'mcq',
+                    tier: 'Easy',
+                    questionText: questionText,
+                    questionPron: questionPron,
+                    options: shuffleArray(options),
+                    answer: correctAnswer
+                });
+            });
+
+            // 5 Medium Connect (1 question = 1 set of 4 pairs, but let's make 5 separate connect sets using 4 random items each)
+            for(let i=0; i<5; i++) {
+                let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
+                let subset = shuffleArray([...vocabulary.medium]).slice(0, 4);
+
+                let pairs = {};
+                subset.forEach(v => {
+                    let key = isEnToFi ? v.en : v.fi;
+                    let val = isEnToFi ? v.fi : v.en;
+                    // For connect, we just store text, but if fi, we can append pron visually later
+                    pairs[key] = { text: val, pron: isEnToFi ? v.pron : null, keyPron: isEnToFi ? null : v.pron };
+                });
+
+                questions.push({
+                    type: 'connect',
+                    tier: 'Medium',
+                    pairs: pairs
+                });
+            }
+
+            // 5 Hard Flashcards
+            let hardVocab = shuffleArray([...vocabulary.hard]).slice(0, 5);
+            hardVocab.forEach(v => {
+                let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
+
+                questions.push({
+                    type: 'flashcard',
+                    tier: 'Hard',
+                    questionText: isEnToFi ? v.en : v.fi,
+                    questionPron: isEnToFi ? null : v.pron,
+                    answerText: isEnToFi ? v.fi : v.en,
+                    answerPron: isEnToFi ? v.pron : null
+                });
+            });
+
+            return questions;
+        }
+
+        function startGame() {
+            currentQuestions = generateQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreElement.textContent = `Score: ${score}`;
+            welcomeScreen.classList.add('hidden');
+            questionScreen.classList.remove('hidden');
+            endScreen.classList.add('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= currentQuestions.length) {
+                showEndScreen();
+                return;
+            }
+
+            const q = currentQuestions[currentQuestionIndex];
+            questionCounter.textContent = `Question: ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+            tierDisplay.textContent = `Level: ${q.tier}`;
+
+            // Set tier colors
+            tierDisplay.className = 'font-bold px-3 py-1 rounded-full text-sm sm:text-base ';
+            if(q.tier === 'Easy') tierDisplay.classList.add('bg-green-100', 'text-green-800');
+            if(q.tier === 'Medium') tierDisplay.classList.add('bg-yellow-100', 'text-yellow-800');
+            if(q.tier === 'Hard') tierDisplay.classList.add('bg-red-100', 'text-red-800');
+
+            optionsContainer.innerHTML = '';
+            flashcardAnswer.classList.add('hidden');
+            connectDotsContainer.classList.add('hidden');
+            flashcardButtons.classList.add('hidden');
+            feedback.textContent = '';
+            isAnswerShown = false;
+            selectedConnectItems = [];
+
+            // Reset text
+            questionContent.textContent = q.questionText || 'Match the following phrases:';
+            questionPronunciation.classList.add('hidden');
+            if (q.questionPron) {
+                questionPronunciation.textContent = `(${q.questionPron})`;
+                questionPronunciation.classList.remove('hidden');
+            }
+
+            switch (q.type) {
+                case 'mcq':
+                    renderMCQ(q);
+                    break;
+                case 'connect':
+                    renderConnect(q);
+                    break;
+                case 'flashcard':
+                    renderFlashcard(q);
+                    break;
+            }
+        }
+
+        function renderMCQ(q) {
+            optionsContainer.classList.remove('hidden');
+            q.options.forEach(opt => {
+                const button = document.createElement('button');
+                button.className = 'btn btn-secondary mcq-option';
+
+                const mainSpan = document.createElement('span');
+                mainSpan.className = 'main-text';
+                mainSpan.textContent = opt.text;
+                button.appendChild(mainSpan);
+
+                if (opt.pron) {
+                    const pronSpan = document.createElement('span');
+                    pronSpan.className = 'pronunciation';
+                    pronSpan.textContent = `(${opt.pron})`;
+                    button.appendChild(pronSpan);
+                }
+
+                button.onclick = () => checkMCQAnswer(opt.text, q.answer, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        function checkMCQAnswer(selectedText, correctAnswer, button) {
+            if (isAnswerShown) return;
+            isAnswerShown = true;
+
+            if (selectedText === correctAnswer) {
+                score++;
+                scoreElement.textContent = `Score: ${score}`;
+                feedback.textContent = 'Oikein! (Correct!)';
+                feedback.className = 'mt-4 text-center font-bold text-lg h-6 text-green-600';
+                button.classList.remove('btn-secondary');
+                button.classList.add('bg-green-500', 'text-white', 'border-green-500');
+                if(button.querySelector('.pronunciation')) button.querySelector('.pronunciation').style.color = '#e0f2fe';
+            } else {
+                feedback.textContent = `Väärin (Incorrect). The answer was: ${correctAnswer}`;
+                feedback.className = 'mt-4 text-center font-bold text-lg h-6 text-red-600';
+                button.classList.remove('btn-secondary');
+                button.classList.add('bg-red-500', 'text-white', 'border-red-500');
+                if(button.querySelector('.pronunciation')) button.querySelector('.pronunciation').style.color = '#fee2e2';
+
+                // Highlight correct
+                Array.from(optionsContainer.children).forEach(btn => {
+                    if (btn.querySelector('.main-text').textContent === correctAnswer) {
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('bg-green-500', 'text-white', 'border-green-500');
+                        if(btn.querySelector('.pronunciation')) btn.querySelector('.pronunciation').style.color = '#e0f2fe';
+                    }
+                });
+            }
+
+            Array.from(optionsContainer.children).forEach(btn => btn.disabled = true);
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 2000);
+        }
+
+        function renderConnect(q) {
+            connectDotsContainer.classList.remove('hidden');
+
+            const leftKeys = Object.keys(q.pairs);
+            const leftItems = shuffleArray([...leftKeys]);
+
+            const rightKeys = leftKeys.map(k => q.pairs[k].text);
+            const rightItems = shuffleArray([...rightKeys]);
+
+            connectDotsContainer.innerHTML = '';
+
+            leftItems.forEach(itemText => {
+                const div = document.createElement('div');
+                div.className = 'connect-item';
+                div.dataset.value = itemText;
+                div.dataset.type = 'left';
+
+                const span = document.createElement('span');
+                span.className = 'font-semibold';
+                span.textContent = itemText;
+                div.appendChild(span);
+
+                if (q.pairs[itemText].keyPron) {
+                    const pronSpan = document.createElement('span');
+                    pronSpan.className = 'pronunciation';
+                    pronSpan.textContent = `(${q.pairs[itemText].keyPron})`;
+                    div.appendChild(pronSpan);
+                }
+
+                div.onclick = () => handleConnectClick(div, q);
+                connectDotsContainer.appendChild(div);
+            });
+
+            rightItems.forEach(itemText => {
+                const div = document.createElement('div');
+                div.className = 'connect-item';
+                div.dataset.value = itemText;
+                div.dataset.type = 'right';
+
+                const span = document.createElement('span');
+                span.className = 'font-semibold';
+                span.textContent = itemText;
+                div.appendChild(span);
+
+                // Find original pair object to get right side pron
+                const origKey = leftKeys.find(k => q.pairs[k].text === itemText);
+                if (origKey && q.pairs[origKey].pron) {
+                    const pronSpan = document.createElement('span');
+                    pronSpan.className = 'pronunciation';
+                    pronSpan.textContent = `(${q.pairs[origKey].pron})`;
+                    div.appendChild(pronSpan);
+                }
+
+                div.onclick = () => handleConnectClick(div, q);
+                connectDotsContainer.appendChild(div);
+            });
+        }
+
+        function handleConnectClick(element, q) {
+            if (isAnswerShown) return;
+
+            element.classList.toggle('selected');
+            const index = selectedConnectItems.indexOf(element);
+            if (index > -1) {
+                selectedConnectItems.splice(index, 1);
+            } else {
+                selectedConnectItems.push(element);
+            }
+
+            if (selectedConnectItems.length === 2) {
+                const [item1, item2] = selectedConnectItems;
+
+                if (item1.dataset.type !== item2.dataset.type) {
+                    const left = item1.dataset.type === 'left' ? item1 : item2;
+                    const right = item1.dataset.type === 'right' ? item1 : item2;
+
+                    if (q.pairs[left.dataset.value].text === right.dataset.value) {
+                        left.classList.remove('selected');
+                        right.classList.remove('selected');
+                        left.classList.add('correct');
+                        right.classList.add('correct');
+
+                        score += 0.25; // 4 pairs per question = 1 full point
+                        scoreElement.textContent = `Score: ${Math.floor(score)}`;
+
+                        feedback.textContent = 'Oikein! (Correct Pair!)';
+                        feedback.className = 'mt-4 text-center font-bold text-lg h-6 text-green-600';
+                        selectedConnectItems = [];
+
+                        const allCorrect = Array.from(connectDotsContainer.children).every(item => item.classList.contains('correct'));
+                        if (allCorrect) {
+                            setTimeout(() => {
+                                currentQuestionIndex++;
+                                loadQuestion();
+                            }, 1500);
+                        }
+                    } else {
+                        left.classList.remove('selected');
+                        right.classList.remove('selected');
+                        left.classList.add('incorrect');
+                        right.classList.add('incorrect');
+                        feedback.textContent = 'Väärin (Incorrect Pair). Try again!';
+                        feedback.className = 'mt-4 text-center font-bold text-lg h-6 text-red-600';
+                        setTimeout(() => {
+                            left.classList.remove('incorrect');
+                            right.classList.remove('incorrect');
+                            selectedConnectItems = [];
+                            feedback.textContent = '';
+                        }, 1000);
+                    }
+                } else {
+                    setTimeout(() => {
+                        item1.classList.remove('selected');
+                        item2.classList.remove('selected');
+                        selectedConnectItems = [];
+                    }, 500);
+                }
+            }
+        }
+
+        function renderFlashcard(q) {
+            flashcardButtons.classList.remove('hidden');
+            showAnswerBtn.classList.remove('hidden');
+            nextFlashcardBtn.classList.add('hidden');
+
+            fcText.textContent = q.answerText;
+            if(q.answerPron) {
+                fcPronunciation.textContent = `(${q.answerPron})`;
+                fcPronunciation.classList.remove('hidden');
+            } else {
+                fcPronunciation.classList.add('hidden');
+            }
+
+            showAnswerBtn.onclick = () => {
+                flashcardAnswer.classList.remove('hidden');
+                showAnswerBtn.classList.add('hidden');
+                nextFlashcardBtn.classList.remove('hidden');
+                // Flashcards always give a point for reviewing
+                score++;
+                scoreElement.textContent = `Score: ${Math.floor(score)}`;
+            };
+
+            nextFlashcardBtn.onclick = () => {
+                currentQuestionIndex++;
+                loadQuestion();
+            };
+        }
+
+        function showEndScreen() {
+            questionScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScoreElement.textContent = `Sinun tuloksesi (Your Score): ${Math.floor(score)} / ${currentQuestions.length}`;
+        }
+
+        startGameBtn.addEventListener('click', startGame);
+        restartGameBtn.addEventListener('click', startGame);
+    </script>
+</body>
+</html>
