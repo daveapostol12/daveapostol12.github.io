@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finnish Survival Language App</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
@@ -114,6 +115,48 @@
             font-size: 1.1rem;
             font-weight: 600;
         }
+
+        .audio-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.2rem;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #002F6C;
+            transition: background-color 0.2s;
+        }
+        .audio-btn:hover {
+            background-color: #e2e8f0;
+        }
+        .audio-btn svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+        .flashcard-audio-btn svg {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        /* 3D Flip Animation for Flashcards */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+        .flip-active {
+            transform: rotateX(180deg);
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .flip-back {
+            transform: rotateX(180deg);
+        }
     </style>
 </head>
 <body>
@@ -121,20 +164,43 @@
     <div id="game-container" class="container">
         <h1 class="text-3xl font-bold text-center text-[#002F6C] mb-2">Finnish Survival App</h1>
 
-        <div id="welcome-screen" class="text-center p-8 bg-blue-50/50 rounded-lg shadow-inner">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-800">Learn to Survive in Finland!</h2>
-            <p class="text-gray-600 mb-6">Master essential phrases for ordering food, basic conversation, and small talk.</p>
+        <div id="welcome-screen" class="text-center p-6 sm:p-8 bg-blue-50/50 rounded-xl shadow-inner">
+            <h2 class="text-2xl sm:text-3xl font-semibold mb-4 text-[#002F6C]">Learn to Survive in Finland!</h2>
+            <p class="text-gray-600 mb-8 max-w-md mx-auto">Master essential phrases for ordering food, basic conversation, and emergencies.</p>
 
-            <div class="mb-8">
-                <h3 class="font-semibold mb-3 text-gray-700">Select Practice Mode:</h3>
-                <div class="flex flex-col sm:flex-row justify-center gap-3">
-                    <button class="btn btn-secondary mode-btn" data-mode="en-fi">English to Finnish</button>
-                    <button class="btn btn-secondary mode-btn" data-mode="fi-en">Finnish to English</button>
-                    <button class="btn btn-primary mode-btn" data-mode="mixed">Mixed</button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 text-left">
+                <!-- Category Selection -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h3 class="font-semibold mb-3 text-gray-700 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#002F6C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        Choose Topic:
+                    </h3>
+                    <div class="flex flex-col gap-2">
+                        <button class="btn btn-primary category-btn text-left px-4" data-category="Small Talk">💬 Small Talk</button>
+                        <button class="btn btn-secondary category-btn text-left px-4" data-category="Food & Dining">🍽️ Food & Dining</button>
+                        <button class="btn btn-secondary category-btn text-left px-4" data-category="Travel & Emergencies">🚆 Travel & Emergencies</button>
+                    </div>
+                </div>
+
+                <!-- Mode Selection -->
+                <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+                    <h3 class="font-semibold mb-3 text-gray-700 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#002F6C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        Translation Mode:
+                    </h3>
+                    <div class="flex flex-col gap-2">
+                        <button class="btn btn-secondary mode-btn text-left px-4" data-mode="en-fi">🇺🇸 ➔ 🇫🇮 English to Finnish</button>
+                        <button class="btn btn-secondary mode-btn text-left px-4" data-mode="fi-en">🇫🇮 ➔ 🇺🇸 Finnish to English</button>
+                        <button class="btn btn-primary mode-btn text-left px-4" data-mode="mixed">🔀 Mixed</button>
+                    </div>
                 </div>
             </div>
 
-            <button id="start-game-btn" class="btn btn-primary w-full max-w-xs text-lg">Start Learning</button>
+            <button id="start-game-btn" class="btn btn-primary w-full sm:w-auto px-10 text-lg shadow-lg hover:shadow-xl transition-all">Start Learning Now</button>
         </div>
 
         <div id="question-screen" class="hidden">
@@ -150,15 +216,26 @@
 
                 <div id="options-container" class="flex flex-col gap-3 mt-4 hidden"></div>
 
-                <div id="flashcard-answer" class="hidden flex flex-col items-center mt-4 p-6 bg-white rounded-lg border-2 border-[#002F6C]">
-                    <div id="fc-text" class="text-2xl font-bold text-[#002F6C] text-center"></div>
-                    <div id="fc-pronunciation" class="pronunciation text-lg mt-2 text-center"></div>
+                <div id="flashcard-container" class="hidden perspective-1000 mt-4 h-48 w-full">
+                    <div id="flashcard-inner" class="relative w-full h-full transform-style-3d cursor-pointer rounded-lg">
+                        <!-- Front of card (Question) -->
+                        <div id="flashcard-front" class="absolute w-full h-full backface-hidden flex flex-col items-center justify-center p-6 bg-[#002F6C] text-white rounded-lg border-2 border-[#002F6C] shadow-md">
+                            <span class="text-lg mb-2 opacity-80">Tap to flip</span>
+                            <div id="fc-front-text" class="text-2xl font-bold text-center"></div>
+                            <div id="fc-front-pronunciation" class="text-center mt-2"></div>
+                        </div>
+
+                        <!-- Back of card (Answer) -->
+                        <div id="flashcard-back" class="absolute w-full h-full backface-hidden flip-back flex flex-col items-center justify-center p-6 bg-white rounded-lg border-2 border-[#002F6C] shadow-md">
+                            <div id="fc-text" class="text-2xl font-bold text-[#002F6C] text-center"></div>
+                            <div id="fc-pronunciation" class="pronunciation text-lg mt-2 text-center"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <div id="connect-dots-container" class="hidden connect-list mt-4"></div>
 
                 <div id="flashcard-buttons" class="hidden flex justify-center gap-4 mt-6">
-                    <button id="show-answer-btn" class="btn btn-primary w-full md:w-auto">Show Answer</button>
                     <button id="next-flashcard-btn" class="btn btn-secondary w-full md:w-auto hidden">Next Question</button>
                 </div>
             </div>
@@ -173,45 +250,80 @@
     </div>
 
     <script>
-        const vocabulary = {
-            easy: [
-                { en: "Hello", fi: "Hei", pron: "hay" },
-                { en: "Thank you", fi: "Kiitos", pron: "kee-tohs" },
-                { en: "Yes", fi: "Kyllä", pron: "kewl-la" },
-                { en: "No", fi: "Ei", pron: "ay" },
-                { en: "Please", fi: "Ole hyvä", pron: "oh-leh hew-va" },
-                { en: "Sorry", fi: "Anteeksi", pron: "ahn-tehk-see" },
-                { en: "Good morning", fi: "Huomenta", pron: "huo-men-tah" },
-                { en: "Goodbye", fi: "Moi moi", pron: "moy moy" },
-                { en: "Water", fi: "Vesi", pron: "veh-see" },
-                { en: "Coffee", fi: "Kahvi", pron: "kah-vee" }
-            ],
-            medium: [
-                { en: "How are you?", fi: "Mitä kuuluu?", pron: "mee-ta koo-loo" },
-                { en: "I don't understand", fi: "En ymmärrä", pron: "en ew-mar-ra" },
-                { en: "Do you speak English?", fi: "Puhutko englantia?", pron: "poo-hut-ko eng-lahn-tee-ah" },
-                { en: "Where is the toilet?", fi: "Missä on vessa?", pron: "mis-sa on ves-sah" },
-                { en: "How much does this cost?", fi: "Mitä tämä maksaa?", pron: "mee-ta ta-ma mahk-sah" },
-                { en: "I would like a coffee", fi: "Saisinko kahvin", pron: "sigh-sin-ko kah-vin" },
-                { en: "The check, please", fi: "Lasku, kiitos", pron: "lahs-koo, kee-tohs" },
-                { en: "My name is...", fi: "Minun nimeni on...", pron: "mee-noon nee-meh-nee on" },
-                { en: "Nice to meet you", fi: "Hauska tutustua", pron: "hows-kah too-toos-too-ah" },
-                { en: "I am a student", fi: "Olen opiskelija", pron: "oh-len oh-pis-keh-lee-yah" }
-            ],
-            hard: [
-                { en: "Could I have the menu, please?", fi: "Saisinko ruokalistan, kiitos?", pron: "sigh-sin-ko ruo-kah-lis-tahn, kee-tohs" },
-                { en: "I am allergic to nuts.", fi: "Olen allerginen pähkinöille.", pron: "oh-len ahl-ler-gee-nen pah-kee-noil-leh" },
-                { en: "Can I pay with a card?", fi: "Voinko maksaa kortilla?", pron: "voin-ko mahk-sah kor-til-lah" },
-                { en: "What do you recommend?", fi: "Mitä suosittelet?", pron: "mee-ta suo-sit-teh-let" },
-                { en: "I study at the university.", fi: "Opiskelen yliopistossa.", pron: "oh-pis-keh-len ew-lee-oh-pis-tos-sah" },
-                { en: "Could you speak a little slower?", fi: "Voisitko puhua hieman hitaammin?", pron: "voy-sit-ko poo-hoo-ah hee-eh-mahn hee-tahm-min" },
-                { en: "It is very cold today.", fi: "Tänään on todella kylmä.", pron: "ta-nan on toh-del-lah kewl-ma" },
-                { en: "Where is the nearest grocery store?", fi: "Missä on lähin ruokakauppa?", pron: "mis-sa on la-hin ruo-kah-kowp-pah" },
-                { en: "I need to go to the pharmacy.", fi: "Minun täytyy mennä apteekkiin.", pron: "mee-noon tay-tew men-na ahp-tehk-kin" },
-                { en: "Thank you for the delicious food.", fi: "Kiitos herkullisesta ruoasta.", pron: "kee-tohs her-kool-lee-ses-tah ruo-ahs-tah" }
-            ]
+        const categorizedVocabulary = {
+            "Small Talk": {
+                easy: [
+                    { en: "Hello", fi: "Hei", pron: "hay" },
+                    { en: "Thank you", fi: "Kiitos", pron: "kee-tohs" },
+                    { en: "Yes", fi: "Kyllä", pron: "kewl-la" },
+                    { en: "No", fi: "Ei", pron: "ay" },
+                    { en: "Please", fi: "Ole hyvä", pron: "oh-leh hew-va" },
+                    { en: "Sorry", fi: "Anteeksi", pron: "ahn-tehk-see" }
+                ],
+                medium: [
+                    { en: "How are you?", fi: "Mitä kuuluu?", pron: "mee-ta koo-loo" },
+                    { en: "I don't understand", fi: "En ymmärrä", pron: "en ew-mar-ra" },
+                    { en: "My name is...", fi: "Minun nimeni on...", pron: "mee-noon nee-meh-nee on" },
+                    { en: "Nice to meet you", fi: "Hauska tutustua", pron: "hows-kah too-toos-too-ah" },
+                    { en: "I am a student", fi: "Olen opiskelija", pron: "oh-len oh-pis-keh-lee-yah" },
+                    { en: "Do you speak English?", fi: "Puhutko englantia?", pron: "poo-hut-ko eng-lahn-tee-ah" }
+                ],
+                hard: [
+                    { en: "I study at the university.", fi: "Opiskelen yliopistossa.", pron: "oh-pis-keh-len ew-lee-oh-pis-tos-sah" },
+                    { en: "Could you speak a little slower?", fi: "Voisitko puhua hieman hitaammin?", pron: "voy-sit-ko poo-hoo-ah hee-eh-mahn hee-tahm-min" },
+                    { en: "It is very cold today.", fi: "Tänään on todella kylmä.", pron: "ta-nan on toh-del-lah kewl-ma" },
+                    { en: "I am from the United States.", fi: "Olen kotoisin Yhdysvalloista.", pron: "oh-len koh-toy-sin ew-h-dews-vahl-loys-tah" }
+                ]
+            },
+            "Food & Dining": {
+                easy: [
+                    { en: "Water", fi: "Vesi", pron: "veh-see" },
+                    { en: "Coffee", fi: "Kahvi", pron: "kah-vee" },
+                    { en: "Beer", fi: "Olut", pron: "oh-loot" },
+                    { en: "Food", fi: "Ruoka", pron: "ruo-kah" },
+                    { en: "Delicious", fi: "Herkullinen", pron: "her-kool-lee-nen" }
+                ],
+                medium: [
+                    { en: "I would like a coffee", fi: "Saisinko kahvin", pron: "sigh-sin-ko kah-vin" },
+                    { en: "The check, please", fi: "Lasku, kiitos", pron: "lahs-koo, kee-tohs" },
+                    { en: "How much does this cost?", fi: "Mitä tämä maksaa?", pron: "mee-ta ta-ma mahk-sah" },
+                    { en: "One beer, please", fi: "Yksi olut, kiitos", pron: "ewk-see oh-loot, kee-tohs" },
+                    { en: "A table for two", fi: "Pöytä kahdelle", pron: "poy-ta kah-del-leh" }
+                ],
+                hard: [
+                    { en: "Could I have the menu, please?", fi: "Saisinko ruokalistan, kiitos?", pron: "sigh-sin-ko ruo-kah-lis-tahn, kee-tohs" },
+                    { en: "I am allergic to nuts.", fi: "Olen allerginen pähkinöille.", pron: "oh-len ahl-ler-gee-nen pah-kee-noil-leh" },
+                    { en: "Can I pay with a card?", fi: "Voinko maksaa kortilla?", pron: "voin-ko mahk-sah kor-til-lah" },
+                    { en: "What do you recommend?", fi: "Mitä suosittelet?", pron: "mee-ta suo-sit-teh-let" },
+                    { en: "Thank you for the delicious food.", fi: "Kiitos herkullisesta ruoasta.", pron: "kee-tohs her-kool-lee-ses-tah ruo-ahs-tah" }
+                ]
+            },
+            "Travel & Emergencies": {
+                easy: [
+                    { en: "Help!", fi: "Apua!", pron: "ah-poo-ah" },
+                    { en: "Stop", fi: "Seis", pron: "say-s" },
+                    { en: "Bus", fi: "Bussi", pron: "boos-see" },
+                    { en: "Train", fi: "Juna", pron: "yoo-nah" },
+                    { en: "Ticket", fi: "Lippu", pron: "lip-poo" }
+                ],
+                medium: [
+                    { en: "Where is the toilet?", fi: "Missä on vessa?", pron: "mis-sa on ves-sah" },
+                    { en: "Where is the station?", fi: "Missä on asema?", pron: "mis-sa on ah-seh-mah" },
+                    { en: "I need a doctor", fi: "Tarvitsen lääkärin", pron: "tahr-vit-sen laa-ka-rin" },
+                    { en: "Call the police", fi: "Soita poliisille", pron: "soy-tah poh-lee-sil-leh" },
+                    { en: "Turn left / right", fi: "Käänny vasemmalle / oikealle", pron: "kaan-new vah-sem-mahl-leh / oy-keh-ahl-leh" }
+                ],
+                hard: [
+                    { en: "Where is the nearest grocery store?", fi: "Missä on lähin ruokakauppa?", pron: "mis-sa on la-hin ruo-kah-kowp-pah" },
+                    { en: "I need to go to the pharmacy.", fi: "Minun täytyy mennä apteekkiin.", pron: "mee-noon tay-tew men-na ahp-tehk-kin" },
+                    { en: "I have lost my passport.", fi: "Olen hukannut passini.", pron: "oh-len hoo-kahn-noot pahs-see-nee" },
+                    { en: "Can you help me, please?", fi: "Voitko auttaa minua, kiitos?", pron: "voyt-ko owt-tah mee-noo-ah, kee-tohs" },
+                    { en: "At what time does the train leave?", fi: "Mihin aikaan juna lähtee?", pron: "mee-hin eye-kahn yoo-nah lah-teh" }
+                ]
+            }
         };
 
+        let currentCategory = "Small Talk";
         let currentMode = 'mixed'; // 'en-fi', 'fi-en', 'mixed'
         let currentQuestions = [];
         let currentQuestionIndex = 0;
@@ -228,6 +340,22 @@
             return array;
         }
 
+        // Category selection logic
+        const categoryBtns = document.querySelectorAll('.category-btn');
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                categoryBtns.forEach(b => {
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-secondary');
+                });
+                // Ensure we get the button element even if clicking the emoji span
+                const targetBtn = e.target.closest('button');
+                targetBtn.classList.remove('btn-secondary');
+                targetBtn.classList.add('btn-primary');
+                currentCategory = targetBtn.dataset.category;
+            });
+        });
+
         // Mode selection logic
         const modeBtns = document.querySelectorAll('.mode-btn');
         modeBtns.forEach(btn => {
@@ -236,9 +364,10 @@
                     b.classList.remove('btn-primary');
                     b.classList.add('btn-secondary');
                 });
-                e.target.classList.remove('btn-secondary');
-                e.target.classList.add('btn-primary');
-                currentMode = e.target.dataset.mode;
+                const targetBtn = e.target.closest('button');
+                targetBtn.classList.remove('btn-secondary');
+                targetBtn.classList.add('btn-primary');
+                currentMode = targetBtn.dataset.mode;
             });
         });
 
@@ -250,12 +379,14 @@
         const questionContent = document.getElementById('question-content');
         const questionPronunciation = document.getElementById('question-pronunciation');
         const optionsContainer = document.getElementById('options-container');
-        const flashcardAnswer = document.getElementById('flashcard-answer');
+        const flashcardContainer = document.getElementById('flashcard-container');
+        const flashcardInner = document.getElementById('flashcard-inner');
+        const fcFrontText = document.getElementById('fc-front-text');
+        const fcFrontPronunciation = document.getElementById('fc-front-pronunciation');
         const fcText = document.getElementById('fc-text');
         const fcPronunciation = document.getElementById('fc-pronunciation');
         const connectDotsContainer = document.getElementById('connect-dots-container');
         const flashcardButtons = document.getElementById('flashcard-buttons');
-        const showAnswerBtn = document.getElementById('show-answer-btn');
         const nextFlashcardBtn = document.getElementById('next-flashcard-btn');
         const feedback = document.getElementById('feedback');
         const scoreElement = document.getElementById('score');
@@ -266,8 +397,14 @@
         function generateQuestions() {
             let questions = [];
 
-            // 5 Easy MCQ
-            let easyVocab = shuffleArray([...vocabulary.easy]).slice(0, 5);
+            const vocabCategory = categorizedVocabulary[currentCategory];
+
+            // Generate pool of words based on tier
+            let easyVocab = shuffleArray([...vocabCategory.easy]).slice(0, 5);
+            let mediumVocab = shuffleArray([...vocabCategory.medium]).slice(0, 5);
+            let hardVocab = shuffleArray([...vocabCategory.hard]).slice(0, 5);
+
+            // Easy MCQ
             easyVocab.forEach(v => {
                 let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
 
@@ -276,8 +413,13 @@
                 let questionText = isEnToFi ? v.en : v.fi;
                 let questionPron = isEnToFi ? null : v.pron;
 
-                let otherOptions = vocabulary.easy.filter(item => item !== v);
-                otherOptions = shuffleArray(otherOptions).slice(0, 3);
+                let otherOptions = vocabCategory.easy.filter(item => item !== v);
+                // Fallback to medium if not enough easy options available
+                if (otherOptions.length < 3) {
+                     otherOptions = otherOptions.concat(vocabCategory.medium).slice(0, 3);
+                } else {
+                     otherOptions = shuffleArray(otherOptions).slice(0, 3);
+                }
 
                 let options = otherOptions.map(opt => ({
                     text: isEnToFi ? opt.fi : opt.en,
@@ -295,10 +437,13 @@
                 });
             });
 
-            // 5 Medium Connect (1 question = 1 set of 4 pairs, but let's make 5 separate connect sets using 4 random items each)
-            for(let i=0; i<5; i++) {
+            // Medium Connect (we use 3 connect questions to prevent repetition since lists are smaller)
+            for(let i=0; i<3; i++) {
                 let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
-                let subset = shuffleArray([...vocabulary.medium]).slice(0, 4);
+
+                // Combine medium and some easy to have enough words for a 4-pair matching game
+                let combinedVocab = [...vocabCategory.medium, ...vocabCategory.easy];
+                let subset = shuffleArray(combinedVocab).slice(0, 4);
 
                 let pairs = {};
                 subset.forEach(v => {
@@ -315,8 +460,7 @@
                 });
             }
 
-            // 5 Hard Flashcards
-            let hardVocab = shuffleArray([...vocabulary.hard]).slice(0, 5);
+            // Hard Flashcards
             hardVocab.forEach(v => {
                 let isEnToFi = currentMode === 'mixed' ? Math.random() > 0.5 : currentMode === 'en-fi';
 
@@ -361,19 +505,27 @@
             if(q.tier === 'Hard') tierDisplay.classList.add('bg-red-100', 'text-red-800');
 
             optionsContainer.innerHTML = '';
-            flashcardAnswer.classList.add('hidden');
+            flashcardContainer.classList.add('hidden');
+            flashcardInner.classList.remove('flip-active'); // Reset flip
             connectDotsContainer.classList.add('hidden');
             flashcardButtons.classList.add('hidden');
             feedback.textContent = '';
             isAnswerShown = false;
             selectedConnectItems = [];
 
-            // Reset text
-            questionContent.textContent = q.questionText || 'Match the following phrases:';
-            questionPronunciation.classList.add('hidden');
-            if (q.questionPron) {
-                questionPronunciation.textContent = `(${q.questionPron})`;
-                questionPronunciation.classList.remove('hidden');
+            // Reset main text (hide it if flashcard, since flashcard renders its own front)
+            if (q.type === 'flashcard') {
+                questionContent.classList.add('hidden');
+                questionPronunciation.classList.add('hidden');
+            } else {
+                questionContent.classList.remove('hidden');
+                questionContent.textContent = q.questionText || 'Match the following phrases:';
+                questionPronunciation.innerHTML = '';
+                questionPronunciation.classList.add('hidden');
+                if (q.questionPron) {
+                    questionPronunciation.textContent = `(${q.questionPron})`;
+                    questionPronunciation.classList.remove('hidden');
+                }
             }
 
             switch (q.type) {
@@ -389,22 +541,72 @@
             }
         }
 
+        // Global Audio function
+        function playAudio(text, lang='fi-FI') {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Generate Audio Icon HTML
+        function getAudioIconHTML() {
+            return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>`;
+        }
+
         function renderMCQ(q) {
             optionsContainer.classList.remove('hidden');
+
+            // If the question text is Finnish, add audio button next to it
+            if (q.questionPron !== null) {
+                 const container = document.createElement('div');
+                 container.className = 'flex justify-center items-center gap-2 mt-2';
+
+                 const audioBtn = document.createElement('button');
+                 audioBtn.className = 'audio-btn';
+                 audioBtn.innerHTML = getAudioIconHTML();
+                 audioBtn.onclick = (e) => { e.stopPropagation(); playAudio(q.questionText); };
+
+                 // Append to question pronunciation div safely
+                 questionPronunciation.appendChild(container);
+                 container.appendChild(audioBtn);
+            }
+
+
             q.options.forEach(opt => {
                 const button = document.createElement('button');
-                button.className = 'btn btn-secondary mcq-option';
+                button.className = 'btn btn-secondary mcq-option flex-row items-center justify-between';
+
+                const textContainer = document.createElement('div');
+                textContainer.className = 'flex flex-col items-start';
 
                 const mainSpan = document.createElement('span');
                 mainSpan.className = 'main-text';
                 mainSpan.textContent = opt.text;
-                button.appendChild(mainSpan);
+                textContainer.appendChild(mainSpan);
 
                 if (opt.pron) {
                     const pronSpan = document.createElement('span');
                     pronSpan.className = 'pronunciation';
                     pronSpan.textContent = `(${opt.pron})`;
-                    button.appendChild(pronSpan);
+                    textContainer.appendChild(pronSpan);
+                }
+
+                button.appendChild(textContainer);
+
+                // Add audio button for Finnish options
+                if (opt.pron !== null) {
+                    const audioBtn = document.createElement('div');
+                    audioBtn.className = 'audio-btn';
+                    audioBtn.innerHTML = getAudioIconHTML();
+                    audioBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        playAudio(opt.text);
+                    };
+                    button.appendChild(audioBtn);
                 }
 
                 button.onclick = () => checkMCQAnswer(opt.text, q.answer, button);
@@ -570,25 +772,59 @@
         }
 
         function renderFlashcard(q) {
+            flashcardContainer.classList.remove('hidden');
             flashcardButtons.classList.remove('hidden');
-            showAnswerBtn.classList.remove('hidden');
             nextFlashcardBtn.classList.add('hidden');
 
-            fcText.textContent = q.answerText;
+            // Render Front
+            fcFrontText.innerHTML = '';
+            fcFrontPronunciation.innerHTML = '';
+
+            const frontSpan = document.createElement('span');
+            frontSpan.textContent = q.questionText;
+            fcFrontText.appendChild(frontSpan);
+
+            if (q.questionPron !== null) {
+                 const audioBtn = document.createElement('button');
+                 audioBtn.className = 'audio-btn flashcard-audio-btn ml-2 align-middle text-white';
+                 audioBtn.innerHTML = getAudioIconHTML();
+                 audioBtn.onclick = (e) => { e.stopPropagation(); playAudio(q.questionText); };
+                 fcFrontText.appendChild(audioBtn);
+
+                 fcFrontPronunciation.textContent = `(${q.questionPron})`;
+            }
+
+            // Render Back
+            fcText.innerHTML = '';
+            fcPronunciation.innerHTML = '';
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = q.answerText;
+            fcText.appendChild(textSpan);
+
             if(q.answerPron) {
+                const audioBtn = document.createElement('button');
+                audioBtn.className = 'audio-btn flashcard-audio-btn ml-2 align-middle';
+                audioBtn.innerHTML = getAudioIconHTML();
+                audioBtn.onclick = (e) => { e.stopPropagation(); playAudio(q.answerText); };
+
+                fcText.appendChild(audioBtn);
+
                 fcPronunciation.textContent = `(${q.answerPron})`;
                 fcPronunciation.classList.remove('hidden');
             } else {
                 fcPronunciation.classList.add('hidden');
             }
 
-            showAnswerBtn.onclick = () => {
-                flashcardAnswer.classList.remove('hidden');
-                showAnswerBtn.classList.add('hidden');
-                nextFlashcardBtn.classList.remove('hidden');
-                // Flashcards always give a point for reviewing
-                score++;
-                scoreElement.textContent = `Score: ${Math.floor(score)}`;
+            // Flip Logic
+            flashcardInner.onclick = () => {
+                if (!isAnswerShown) {
+                    isAnswerShown = true;
+                    flashcardInner.classList.add('flip-active');
+                    nextFlashcardBtn.classList.remove('hidden');
+                    score++;
+                    scoreElement.textContent = `Score: ${Math.floor(score)}`;
+                }
             };
 
             nextFlashcardBtn.onclick = () => {
@@ -601,6 +837,33 @@
             questionScreen.classList.add('hidden');
             endScreen.classList.remove('hidden');
             finalScoreElement.textContent = `Sinun tuloksesi (Your Score): ${Math.floor(score)} / ${currentQuestions.length}`;
+
+            // Trigger Confetti
+            if(window.confetti) {
+                const duration = 3000;
+                const end = Date.now() + duration;
+
+                (function frame() {
+                    confetti({
+                        particleCount: 5,
+                        angle: 60,
+                        spread: 55,
+                        origin: { x: 0 },
+                        colors: ['#002F6C', '#ffffff', '#e0f2fe']
+                    });
+                    confetti({
+                        particleCount: 5,
+                        angle: 120,
+                        spread: 55,
+                        origin: { x: 1 },
+                        colors: ['#002F6C', '#ffffff', '#e0f2fe']
+                    });
+
+                    if (Date.now() < end) {
+                        requestAnimationFrame(frame);
+                    }
+                }());
+            }
         }
 
         startGameBtn.addEventListener('click', startGame);
