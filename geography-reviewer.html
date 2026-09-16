@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topic 7: Changing Towns and Cities - Interactive Reviewer</title>
+
+    <!-- Tailwind CSS for corporate styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js for interactive graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Tailwind Configuration for Corporate Theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        corporate: {
+                            dark: '#0f172a',
+                            primary: '#1e3a8a',
+                            secondary: '#3b82f6',
+                            light: '#f8fafc',
+                            accent: '#0ea5e9'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Smooth scrolling for navigation */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Gallery Image Hover Effects */
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 0.5rem;
+        }
+        .gallery-overlay {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.85);
+            color: white;
+            padding: 1rem;
+            transition: bottom 0.3s ease-in-out;
+        }
+        .gallery-item:hover .gallery-overlay {
+            bottom: 0;
+        }
+        .gallery-item img {
+            transition: transform 0.5s ease;
+        }
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-corporate-light text-slate-800 font-sans antialiased">
+
+    <nav class="bg-corporate-dark text-white shadow-lg fixed w-full z-50 top-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-earth-americas text-corporate-accent text-2xl mr-3"></i>
+                    <span class="font-bold text-xl tracking-tight">GeoReview: Topic 7</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#home" class="hover:bg-corporate-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+                        <a href="#interactive-graph" class="hover:bg-corporate-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Urban Growth</a>
+                        <a href="#gallery" class="hover:bg-corporate-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Visual Gallery</a>
+                        <a href="#case-study" class="hover:bg-corporate-primary px-3 py-2 rounded-md text-sm font-medium transition-colors">Mumbai Study</a>
+                        <a href="#quiz" class="bg-corporate-secondary hover:bg-corporate-accent px-4 py-2 rounded-md text-sm font-bold transition-colors shadow">Take Quiz</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header id="home" class="pt-24 pb-12 md:pt-32 md:pb-20 bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold text-corporate-dark mb-4">Changing Towns and Cities</h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8">
+                An interactive reviewer module designed for geography students. Explore the causes of urban growth, push/pull factors, and sustainable management strategies.
+            </p>
+            <div class="flex justify-center gap-4">
+                <a href="#interactive-graph" class="bg-corporate-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-corporate-dark transition-colors shadow-md">
+                    Start Learning <i class="fa-solid fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section id="interactive-graph" class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-corporate-dark">Global Urbanization Trends</h2>
+                <p class="text-slate-600 mt-2">Click on the data points in the graph below to reveal interactive photos and facts about different eras of urban growth.</p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8 bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                <!-- Chart Container -->
+                <div class="w-full lg:w-2/3 h-96 relative cursor-pointer">
+                    <canvas id="populationChart"></canvas>
+                </div>
+
+                <!-- Interactive Photo Display -->
+                <div class="w-full lg:w-1/3 flex flex-col items-center justify-center bg-corporate-light p-6 rounded-lg border border-gray-200">
+                    <div id="graph-photo-container" class="w-full h-48 bg-gray-200 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
+                        <img id="graph-photo" src="https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=600&q=80" alt="Cityscape" class="w-full h-full object-cover transition-opacity duration-300">
+                    </div>
+                    <h3 id="graph-title" class="text-xl font-bold text-corporate-dark w-full text-left mb-2">1950s: Early Growth</h3>
+                    <p id="graph-desc" class="text-slate-600 text-sm w-full text-left">
+                        In the mid-20th century, the global urban population was much smaller. Rural living was still the dominant lifestyle for the vast majority of the global population.
+                    </p>
+                    <div class="mt-4 w-full bg-blue-50 border-l-4 border-corporate-secondary p-3 text-xs text-corporate-primary">
+                        <i class="fa-solid fa-circle-info mr-1"></i> <strong>Tip:</strong> Urban growth occurs due to natural increase and rural-to-urban migration.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="py-16 bg-white border-t border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-corporate-dark">Visualizing Challenges & Strategies</h2>
+                <p class="text-slate-600 mt-2">Hover over the images to review key concepts from Topic 7.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Gallery Item 1 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1505245208761-ba872912fac0?auto=format&fit=crop&w=600&q=80" alt="Shanghai Skyline" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=Shanghai+Skyline';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Economic Opportunities</h4>
+                        <p class="text-sm text-gray-200">Cities like Shanghai offer varied employment, centralized markets, and faster trade. They attract migrants due to high-paying jobs (Pull Factor).</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 2 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1483058712412-4245e9b90334?auto=format&fit=crop&w=600&q=80" alt="Rio Favelas" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=Rio+Favelas';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Informal Settlements</h4>
+                        <p class="text-sm text-gray-200">Rapid growth leads to housing shortages. Areas like the Favelas in Rio de Janeiro form as residents self-build homes. Managed via top-down or bottom-up schemes.</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 3 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1533929736458-ca588d08c8be?auto=format&fit=crop&w=600&q=80" alt="London Traffic" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=London+Traffic';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Transport Challenges</h4>
+                        <p class="text-sm text-gray-200">Pollution and congestion are major environmental challenges. London combats this with a Congestion Charge and Ultra Low Emission Zones (ULEZ).</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 4 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1534008897995-27a23e859048?auto=format&fit=crop&w=600&q=80" alt="Curitiba BRT" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=Curitiba+BRT';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Sustainable Transit (Curitiba)</h4>
+                        <p class="text-sm text-gray-200">Curitiba, Brazil uses an innovative Bus Rapid Transit (BRT) system. Tube-shaped stops allow fast boarding, reducing car trips and emissions by 40%.</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 5 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&w=600&q=80" alt="Mumbai Train" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=Mumbai+Train';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Mumbai Transport Crisis</h4>
+                        <p class="text-sm text-gray-200">Mumbai's suburban train network carries 7.5 million people daily. Extreme overcrowding poses severe safety risks to commuters.</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Item 6 -->
+                <div class="gallery-item h-64 bg-gray-100 shadow-sm border border-gray-200">
+                    <img src="https://images.unsplash.com/photo-1523731407965-2430cd12f5e4?auto=format&fit=crop&w=600&q=80" alt="Green Roofs" class="w-full h-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/600x400/1e3a8a/ffffff?text=Green+Roofs';">
+                    <div class="gallery-overlay">
+                        <h4 class="font-bold text-lg mb-1">Green Infrastructure</h4>
+                        <p class="text-sm text-gray-200">Projects like 'azoteas verdes' (green roofs) in Mexico City or Bishan-Ang Mo Kio Park in Singapore improve air quality, biodiversity, and mental wellbeing.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="case-study" class="py-16 bg-slate-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-corporate-dark rounded-2xl shadow-xl overflow-hidden text-white">
+                <div class="grid grid-cols-1 md:grid-cols-2">
+                    <div class="p-8 md:p-12 flex flex-col justify-center">
+                        <span class="text-corporate-secondary font-bold tracking-wider uppercase text-sm mb-2">Deep Dive Case Study</span>
+                        <h2 class="text-3xl font-bold mb-4">Mumbai, India</h2>
+                        <p class="text-gray-300 mb-6">
+                            Mumbai is a rapidly growing megacity, growing by half a million people per year. 60% of migrants come from villages within Maharashtra, driven by pull factors like jobs in banking, tech, and Bollywood.
+                        </p>
+                        <ul class="space-y-3 mb-8">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-house-chimney-crack text-corporate-accent mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="block text-white">The Dharavi Settlement</strong>
+                                    <span class="text-sm text-gray-400">Home to 1 million people. Offers strong community and informal economy (leather, textiles), but suffers from poor sanitation.</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-train text-corporate-accent mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="block text-white">Transport Solutions</strong>
+                                    <span class="text-sm text-gray-400">The monorail largely failed due to poor integration. The Mumbai Master Metro Plan aims to fix this, carrying 1.7m daily passengers.</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-leaf text-corporate-accent mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="block text-white">Mangrove Protection</strong>
+                                    <span class="text-sm text-gray-400">Vital green spaces are being cleared for treatment plants. Mangroves act as natural filters and carbon sinks.</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="h-64 md:h-auto relative">
+                        <img src="https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80" alt="Mumbai City" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-r from-corporate-dark to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="quiz" class="py-16 bg-white">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-corporate-dark">Test Your Knowledge</h2>
+                <p class="text-slate-600 mt-2">Take this quick review quiz based on Topic 7.</p>
+            </div>
+
+            <div id="quiz-container" class="bg-slate-50 border border-gray-200 rounded-xl shadow-md p-8">
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                    <div id="quiz-progress" class="bg-corporate-secondary h-2.5 rounded-full" style="width: 20%"></div>
+                </div>
+
+                <div id="question-container">
+                    <h3 id="question-text" class="text-xl font-bold text-corporate-dark mb-4">Loading question...</h3>
+                    <div id="options-container" class="space-y-3">
+                        <!-- Options will be injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Result Message (Hidden by default) -->
+                <div id="result-message" class="hidden mt-6 p-4 rounded-md">
+                    <p id="result-text" class="font-semibold"></p>
+                    <p id="explanation-text" class="text-sm mt-2"></p>
+                    <button id="next-btn" class="mt-4 bg-corporate-primary hover:bg-corporate-dark text-white px-4 py-2 rounded font-medium transition-colors hidden">Next Question</button>
+                    <button id="restart-btn" class="mt-4 bg-corporate-secondary hover:bg-corporate-accent text-white px-4 py-2 rounded font-medium transition-colors hidden">Restart Quiz</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-corporate-dark text-gray-300 py-8 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0">
+                <span class="font-bold text-white text-lg"><i class="fa-solid fa-earth-americas text-corporate-secondary mr-2"></i>GeoReview</span>
+                <p class="text-sm mt-1 text-gray-400">Interactive learning for geography students.</p>
+            </div>
+            <div class="text-sm text-gray-500">
+                &copy; 2026 Interactive Educational Resources. Based on Topic 7 material.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 1. Chart.js Interactive Graph Logic
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('populationChart').getContext('2d');
+
+            // Dummy Data simulating Urban vs Rural from 1950 to 2050
+            const labels = ['1950', '1970', '1990', '2010', '2030', '2050'];
+            const urbanPop = [0.7, 1.4, 2.3, 3.6, 5.0, 6.7]; // in billions
+            const ruralPop = [1.8, 2.3, 3.1, 3.4, 3.3, 3.1]; // in billions
+
+            // Data for the interactive side panel
+            const photoData = [
+                {
+                    title: "1950s: Early Growth",
+                    desc: "In 1950, only about 30% of the world's population lived in urban areas. Rural living and agriculture dominated the global landscape.",
+                    img: "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    title: "1970s: The Shift Begins",
+                    desc: "Industrialization pushes forward. Rural-to-urban migration accelerates in many parts of the world seeking better economic opportunities.",
+                    img: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    title: "1990s: Accelerating Urbanization",
+                    desc: "By 1990, over 40% of the world is urbanized. Mega-cities begin to form, particularly in Middle Income Countries (MICs).",
+                    img: "https://images.unsplash.com/photo-1514565131-fce0801e5785?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    title: "2010s: The Urban Tipping Point",
+                    desc: "For the first time in history, more than 50% of the global population lives in urban areas. Cities face massive management challenges.",
+                    img: "https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    title: "2030s: Future Projections",
+                    desc: "The urban population is projected to soar, mostly driven by growth in Low-Income Countries (LICs) in Africa and Asia.",
+                    img: "https://images.unsplash.com/photo-1496807127928-8686a344f686?auto=format&fit=crop&w=600&q=80"
+                },
+                {
+                    title: "2050s: A Highly Urban World",
+                    desc: "By 2050, it is estimated that 66% (almost 7 out of 10 people) will live in cities. Sustainable management will be absolutely critical.",
+                    img: "https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&w=600&q=80"
+                }
+            ];
+
+            const chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Urban Population (Billions)',
+                            data: urbanPop,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#1e3a8a',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointHitRadius: 20
+                        },
+                        {
+                            label: 'Rural Population (Billions)',
+                            data: ruralPop,
+                            borderColor: '#94a3b8',
+                            borderWidth: 3,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: '#64748b',
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointHitRadius: 20
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y + ' Billion';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Population (Billions)' }
+                        }
+                    },
+                    // Magic happens here: onClick updates the side panel
+                    onClick: (e, elements) => {
+                        if (elements.length > 0) {
+                            const dataIndex = elements[0].index;
+                            updateGraphPanel(dataIndex);
+                        }
+                    }
+                }
+            });
+
+            function updateGraphPanel(index) {
+                const data = photoData[index];
+                const imgEl = document.getElementById('graph-photo');
+
+                // Fade out effect
+                imgEl.style.opacity = 0;
+
+                setTimeout(() => {
+                    imgEl.src = data.img;
+                    document.getElementById('graph-title').innerText = data.title;
+                    document.getElementById('graph-desc').innerText = data.desc;
+                    // Fade in effect
+                    imgEl.style.opacity = 1;
+                }, 150); // wait for fade out
+            }
+        });
+
+        // 2. Interactive Quiz Logic
+        const quizQuestions = [
+            {
+                question: "What are the two main causes of urban growth?",
+                options: [
+                    "Decreased birth rates and urban-to-rural migration",
+                    "Natural population increase and rural-to-urban migration",
+                    "Counter-urbanisation and suburbanisation",
+                    "Industrial decline and increased death rates"
+                ],
+                answer: 1,
+                explanation: "Urban growth is driven by natural population increase (births exceeding deaths) and rural to urban migration."
+            },
+            {
+                question: "Which of the following is considered a 'Push' factor?",
+                options: [
+                    "Better access to healthcare",
+                    "Greater food security",
+                    "More job opportunities",
+                    "Water shortages caused by droughts"
+                ],
+                answer: 3,
+                explanation: "Push factors make people want to leave rural areas. Lack of services, water shortages, and low wages are push factors."
+            },
+            {
+                question: "In which type of country is urban growth currently the fastest?",
+                options: [
+                    "High-Income Countries (HICs)",
+                    "Low-Income Countries (LICs)",
+                    "Countries in Western Europe",
+                    "Countries experiencing counter-urbanisation"
+                ],
+                answer: 1,
+                explanation: "LICs experience the most rapid urban growth, while HICs experience slower rates because their rapid urbanization has already occurred."
+            },
+            {
+                question: "What was the purpose of Curitiba's Bus Rapid Transit (BRT) system?",
+                options: [
+                    "To completely ban private cars in the city",
+                    "To reduce reliance on cars and greenhouse gas emissions",
+                    "To charge vehicles for entering the city center",
+                    "To build underground metro lines"
+                ],
+                answer: 1,
+                explanation: "Curitiba's BRT reduced the need for 40 million car trips per year, improving air quality and reducing greenhouse gas emissions."
+            },
+            {
+                question: "What is a major concern regarding the top-down redevelopment of the Dharavi settlement in Mumbai?",
+                options: [
+                    "It will cause too much rural-to-urban migration",
+                    "It might lead to a loss of community spirit and harm the informal economy",
+                    "It will destroy the local mangrove forests",
+                    "There are not enough construction companies to do the work"
+                ],
+                answer: 1,
+                explanation: "Residents fear that moving into high-rise apartments will destroy the strong sense of community and the spaces needed for the informal economy to function."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const resultMessage = document.getElementById('result-message');
+        const resultText = document.getElementById('result-text');
+        const explanationText = document.getElementById('explanation-text');
+        const nextBtn = document.getElementById('next-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const progressBar = document.getElementById('quiz-progress');
+
+        function loadQuestion() {
+            // Reset state
+            resultMessage.classList.add('hidden');
+            nextBtn.classList.add('hidden');
+            restartBtn.classList.add('hidden');
+            optionsContainer.innerHTML = '';
+
+            // Update Progress
+            const progress = ((currentQuestion) / quizQuestions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            const q = quizQuestions[currentQuestion];
+            questionText.innerText = `Q${currentQuestion + 1}: ${q.question}`;
+
+            q.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 bg-white border border-gray-300 rounded-lg hover:bg-blue-50 hover:border-corporate-secondary transition-colors focus:outline-none";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            // Disable all buttons
+            const buttons = optionsContainer.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('hover:bg-blue-50', 'hover:border-corporate-secondary');
+            });
+
+            const q = quizQuestions[currentQuestion];
+            resultMessage.classList.remove('hidden');
+
+            if (selectedIndex === q.answer) {
+                // Correct
+                btnElement.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                resultMessage.classList.remove('bg-red-50', 'border-red-200');
+                resultMessage.classList.add('bg-green-50', 'border', 'border-green-200');
+                resultText.innerHTML = '<i class="fa-solid fa-circle-check text-green-600 mr-2"></i> Correct!';
+                resultText.className = "font-bold text-green-800 text-lg";
+                score++;
+            } else {
+                // Incorrect
+                btnElement.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                // Highlight correct answer
+                buttons[q.answer].classList.add('bg-green-50', 'border-green-400');
+
+                resultMessage.classList.remove('bg-green-50', 'border-green-200');
+                resultMessage.classList.add('bg-red-50', 'border', 'border-red-200');
+                resultText.innerHTML = '<i class="fa-solid fa-circle-xmark text-red-600 mr-2"></i> Incorrect';
+                resultText.className = "font-bold text-red-800 text-lg";
+            }
+
+            explanationText.innerText = q.explanation;
+            explanationText.className = "text-slate-700 mt-2";
+
+            if (currentQuestion < quizQuestions.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                showFinalResult();
+            }
+        }
+
+        function showFinalResult() {
+            progressBar.style.width = `100%`;
+            resultMessage.classList.remove('bg-red-50', 'bg-green-50', 'border-red-200', 'border-green-200');
+            resultMessage.classList.add('bg-corporate-dark', 'text-white');
+
+            resultText.innerHTML = `Quiz Complete! You scored ${score} out of ${quizQuestions.length}.`;
+            resultText.className = "font-bold text-xl text-white";
+
+            if(score === quizQuestions.length) {
+                explanationText.innerHTML = "Excellent work! You have a great grasp of changing towns and cities.";
+            } else {
+                explanationText.innerHTML = "Good effort! Review the gallery and case study sections to brush up on the concepts.";
+            }
+            explanationText.className = "text-gray-300 mt-2";
+
+            restartBtn.classList.remove('hidden');
+        }
+
+        nextBtn.onclick = () => {
+            currentQuestion++;
+            loadQuestion();
+        };
+
+        restartBtn.onclick = () => {
+            currentQuestion = 0;
+            score = 0;
+            resultMessage.classList.remove('bg-corporate-dark', 'text-white');
+            loadQuestion();
+        };
+
+        // Initialize Quiz
+        loadQuestion();
+    </script>
+</body>
+</html>
